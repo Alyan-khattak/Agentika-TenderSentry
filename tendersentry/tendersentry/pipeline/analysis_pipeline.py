@@ -190,15 +190,14 @@ def get_status(session_id: str) -> dict:
                     "finding_count": len(contradictions),
                 }
 
-    # Check if analysis is complete
-    # Complete = all contradictions detected and processed
-    # (current_finding_idx >= len(contradictions) AND findings count matches)
-    contradictions = state.get("contradictions", [])
-    findings = state.get("findings", [])
-    audit_entries = state.get("audit_entries", [])
-
-    if contradictions and len(findings) == len(contradictions) and len(audit_entries) == len(contradictions):
-        # All contradictions have been investigated and decisions logged
+    # Graph reached END — complete regardless of finding/audit counts.
+    # Covers: 0 contradictions, all reviewed, or partial findings after worker failure.
+    documents = state.get("documents", [])
+    graph_done = not state_snapshot.next and not state_snapshot.tasks
+    if graph_done and documents:
+        contradictions = state.get("contradictions", [])
+        findings = state.get("findings", [])
+        audit_entries = state.get("audit_entries", [])
         logging.info(
             f"get_status: analysis complete for session {session_id}: "
             f"{len(contradictions)} detected, {len(findings)} findings, "
@@ -216,29 +215,7 @@ def get_status(session_id: str) -> dict:
             }
         }
 
-    # Graph finished with 0 contradictions: documents extracted but compare found nothing.
-    # state_snapshot.next is empty when graph reached END; documents non-empty confirms
-    # extract ran (not just "analysis not started yet").
-    documents = state.get("documents", [])
-    graph_done = not state_snapshot.next and not state_snapshot.tasks
-    if graph_done and documents and not contradictions:
-        logging.info(
-            f"get_status: analysis complete for session {session_id}: "
-            f"0 contradictions detected"
-        )
-        return {
-            "status": STATUS_COMPLETE,
-            "summary": {
-                "session_id": session_id,
-                "total_detected": 0,
-                "total_findings": 0,
-                "total_decisions": 0,
-                "findings": [],
-                "audit_entries": [],
-            }
-        }
-
-    # Still running (extract, compare, or investigate phases)
+    # Still running (extract, compare, investigate, or between HITL loops)
     return {"status": STATUS_RUNNING}
 
 
