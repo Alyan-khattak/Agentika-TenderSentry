@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TenderSentry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ====================================================================
+           CSS Custom Properties (Design System)
+           ==================================================================== */
+        :root {
+            --bg: #0f1520;
+            --surface: #1a2235;
+            --border: #2a3650;
+            --fg: #e8edf5;
+            --fg-muted: #7a8fa8;
+            --accent: #4d7fff;
+            --flag: #ef4444;
+            --dismiss: #22c55e;
+            --escalate: #f59e0b;
+            --severity-high: #ef4444;
+            --severity-medium: #f59e0b;
+            --severity-low: #22c55e;
+        }
+
+        /* ====================================================================
+           Global Typography & Layout
+           ==================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+            line-height: 1.6;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        /* ====================================================================
+           App Container & Layout
+           ==================================================================== */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .app-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--fg);
+        }
+
+        .session-id {
+            font-size: 12px;
+            color: var(--fg-muted);
+            font-family: 'Courier New', monospace;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .panel-container {
+            max-width: 780px;
+            width: 100%;
+        }
+
+        /* ====================================================================
+           Screen Management (show/hide)
+           ==================================================================== */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* ====================================================================
+           Upload Screen
+           ==================================================================== */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 40px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+            background-color: var(--surface);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background-color: rgba(77, 127, 255, 0.05);
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--accent);
+            background-color: rgba(77, 127, 255, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .upload-label {
+            font-size: 14px;
+            color: var(--fg);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--fg-muted);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--surface);
+            border-radius: 4px;
+            border-left: 3px solid var(--accent);
+            font-size: 13px;
+        }
+
+        .file-item.invalid {
+            border-left-color: var(--flag);
+        }
+
+        .file-item-info {
+            flex: 1;
+        }
+
+        .file-item-name {
+            display: block;
+            color: var(--fg);
+            margin-bottom: 2px;
+        }
+
+        .file-item-size {
+            font-size: 11px;
+            color: var(--fg-muted);
+        }
+
+        .file-item-error {
+            font-size: 11px;
+            color: var(--flag);
+            margin-top: 4px;
+        }
+
+        .file-item-icon {
+            margin-left: 12px;
+            font-size: 16px;
+        }
+
+        .file-item.valid .file-item-icon::before {
+            content: '✓';
+            color: var(--dismiss);
+        }
+
+        .file-item.invalid .file-item-icon::before {
+            content: '✕';
+            color: var(--flag);
+        }
+
+        .button-group {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* ====================================================================
+           Buttons
+           ==================================================================== */
+        button {
+            min-width: 120px;
+            height: 44px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: filter 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            filter: brightness(0.9);
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--border);
+            color: var(--fg-muted);
+            cursor: not-allowed;
+            filter: none;
+        }
+
+        .btn-flag {
+            background-color: var(--flag);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-dismiss {
+            background-color: var(--dismiss);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-escalate {
+            background-color: var(--escalate);
+            color: #1a1a1a;
+            flex: 1;
+        }
+
+        /* ====================================================================
+           Analysing Screen
+           ==================================================================== */
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner-label {
+            font-size: 14px;
+            color: var(--fg);
+            text-align: center;
+            min-height: 20px;
+        }
+
+        /* ====================================================================
+           Badge Component
+           ==================================================================== */
+        .badge {
+            display: inline-block;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-deadline {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .badge-requirement {
+            background-color: #8b5cf6;
+            color: white;
+        }
+
+        .badge-amount {
+            background-color: #f97316;
+            color: white;
+        }
+
+        .badge-high {
+            background-color: var(--severity-high);
+            color: white;
+        }
+
+        .badge-medium {
+            background-color: var(--severity-medium);
+            color: #1a1a1a;
+        }
+
+        .badge-low {
+            background-color: var(--severity-low);
+            color: white;
+        }
+
+        /* ====================================================================
+           HITL Review Screen
+           ==================================================================== */
+        .finding-panel {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .finding-counter {
+            font-size: 13px;
+            color: var(--fg-muted);
+        }
+
+        .finding-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .finding-badges .badge {
+            margin: 0;
+        }
+
+        .finding-excerpt-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background-color: var(--border);
+        }
+
+        @media (max-width: 639px) {
+            .finding-excerpt-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .finding-column {
+            padding: 16px;
+            background-color: var(--surface);
+        }
+
+        .finding-doc-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .excerpt {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--accent);
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', 'Monaco', monospace;
+            font-size: 13px;
+            color: var(--fg);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .finding-section {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .finding-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--fg-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .finding-section-content {
+            font-size: 14px;
+            color: var(--fg);
+            line-height: 1.6;
+        }
+
+        /* ====================================================================
+           JEV Bar Component
+           ==================================================================== */
+        .jev-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .jev-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--fg);
+        }
+
+        .jev-bar-label-left {
+            flex: 1;
+        }
+
+        .jev-bar-label-right {
+            text-align: right;
+        }
+
+        .jev-bar-progress {
+            height: 8px;
+            background-color: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .jev-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #22c55e 0%, #f59e0b 60%, #ef4444 100%);
+            transition: width 0.3s ease;
+        }
+
+        .jev-unavailable {
+            font-size: 12px;
+            color: var(--fg-muted);
+            font-style: italic;
+        }
+
+        /* ====================================================================
+           Finding Note Input
+           ==================================================================== */
+        .finding-note {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--fg);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .finding-note:focus {
+            outline: none;
+            border-color: var(--accent);
+            background-color: rgba(77, 127, 255, 0.05);
+        }
+
+        .finding-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 639px) {
+            .finding-buttons {
+                flex-direction: column;
+            }
+
+            .btn-flag, .btn-dismiss, .btn-escalate {
+                width: 100%;
+                flex: none;
+            }
+        }
+
+        /* ====================================================================
+           Summary Screen
+           ==================================================================== */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .summary-card-label {
+            font-size: 12px;
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .summary-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .audit-table-container {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 32px;
+        }
+
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .audit-table th {
+            background-color: var(--border);
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            font-size: 11px;
+        }
+
+        .audit-table td {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            color: var(--fg);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .audit-table tr:hover {
+            background-color: rgba(77, 127, 255, 0.05);
+        }
+
+        .audit-cell-decision {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .audit-decision-flag {
+            color: var(--flag);
+        }
+
+        .audit-decision-dismiss {
+            color: var(--dismiss);
+        }
+
+        .audit-decision-escalate {
+            color: var(--escalate);
+        }
+
+        /* ====================================================================
+           Error Banner
+           ==================================================================== */
+        .error-banner {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--flag);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: var(--flag);
+            font-size: 13px;
+            display: none;
+        }
+
+        .error-banner.show {
+            display: block;
+        }
+
+        /* ====================================================================
+           Toast Notification
+           ==================================================================== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--dismiss);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease, slideDown 0.3s ease 2.7s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+        }
+
+        /* ====================================================================
+           Utility Classes
+           ==================================================================== */
+        .hidden {
+            display: none;
+        }
+
+        .text-muted {
+            color: var(--fg-muted);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .gap-12 {
+            gap: 12px;
+        }
+
+        .mt-24 {
+            margin-top: 24px;
+        }
+
+        .mb-24 {
+            margin-bottom: 24px;
+        }
+
+        /* ====================================================================
+           Modal: Finding Detail
+           ==================================================================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-width: 780px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 28px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--fg-muted);
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px 8px;
+        }
+
+        .modal-close:hover {
+            color: var(--fg);
+        }
+
+        .modal-close:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--fg);
+        }
+
+        .modal-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .modal-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-doc-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .modal-section {
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .modal-section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .modal-explanation-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--fg);
+        }
+
+        .modal-decision-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Make audit log rows clickable */
+        #audit-log-body tr {
+            cursor: pointer;
+        }
+
+        #audit-log-body tr:hover {
+            background: rgba(77, 127, 255, 0.08);
+        }
+
+        /* ====================================================================
+           Responsive Design
+           ==================================================================== */
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 12px 16px;
+            }
+
+            .app-content {
+                padding: 16px;
+            }
+
+            .app-name {
+                font-size: 18px;
+            }
+
+            .panel-container {
+                max-width: 100%;
+            }
+
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-name">TenderSentry</div>
+            <div class="session-id" id="session-display" style="display: none;">
+                Session: <span id="session-id-text"></span>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <div class="panel-container">
+                <!-- Error Banner (shown above all screens) -->
+                <div id="error-banner" class="error-banner" role="alert"></div>
+
+                <!-- Screen 1: Upload -->
+                <div id="upload-screen" class="screen active">
+                    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--fg);">
+                        Upload Tender Documents
+                    </h2>
+
+                    <div id="upload-zone" class="upload-area">
+                        <span class="upload-icon">📄</span>
+                        <label class="upload-label">Drop PDFs here or click to select</label>
+                        <p class="upload-hint">2-5 PDF files, max 10 MB each</p>
+                        <input
+                            type="file"
+                            id="file-input"
+                            multiple
+                            accept=".pdf"
+                            aria-label="Select PDF files for analysis"
+                        >
+                    </div>
+
+                    <div id="file-list" class="file-list"></div>
+
+                    <div class="button-group">
+                        <button
+                            id="analyse-button"
+                            class="btn-primary"
+                            disabled
+                            aria-label="Start tender analysis"
+                        >
+                            Analyse Tender
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Screen 2: Analysing -->
+                <div id="analysing-screen" class="screen">
+                    <div class="spinner-container">
+                        <div class="spinner" aria-hidden="true"></div>
+                        <p class="spinner-label" id="spinner-message">Extracting documents…</p>
+                    </div>
+                </div>
+
+                <!-- Screen 3: HITL Review -->
+                <div id="hitl-screen" class="screen">
+                    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--fg);">
+                        Review Finding
+                    </h2>
+
+                    <div class="finding-panel">
+                        <div class="finding-header">
+                            <div class="finding-counter">
+                                Finding <span id="finding-index">0</span> of <span id="finding-total">0</span>
+                            </div>
+                            <div class="finding-badges">
+                                <span id="finding-type-badge" class="badge"></span>
+                                <span id="finding-severity-badge" class="badge"></span>
+                            </div>
+                        </div>
+                        <div id="tender-ref-bar" style="display:none;font-size:12px;color:var(--fg-muted);margin-bottom:8px;padding:4px 8px;background:var(--bg-card);border-radius:4px;border:1px solid var(--border);">
+                            Tender: <span id="tender-ref-label" style="font-weight:600;color:var(--fg);font-family:monospace;"></span>
+                        </div>
+
+                        <div class="finding-excerpt-row">
+                            <div class="finding-column">
+                                <div class="finding-doc-title" id="doc-a-title"></div>
+                                <pre class="excerpt" id="excerpt-a" aria-label="Excerpt from first document"></pre>
+                            </div>
+                            <div class="finding-column">
+                                <div class="finding-doc-title" id="doc-b-title"></div>
+                                <pre class="excerpt" id="excerpt-b" aria-label="Excerpt from second document"></pre>
+                            </div>
+                        </div>
+
+                        <div class="finding-section">
+                            <div class="finding-section-title">
+                                💬 Explanation
+                            </div>
+                            <div class="finding-section-content" id="explanation"></div>
+                        </div>
+
+                        <div class="finding-section">
+                            <div class="finding-section-title">
+                                ❓ Suggested Question
+                            </div>
+                            <div class="finding-section-content" id="suggested-question"></div>
+                        </div>
+
+                        <div class="finding-section">
+                            <div class="finding-section-title" style="display:flex;align-items:center;gap:6px;">
+                                JEV Validation
+                                <span title="JEV (Judgment Engine Validation) by TypeSafe AI. Genuine score = confidence the contradiction is real (0–100%). Severity score = impact if genuine. Threshold ≥65% = validated." style="cursor:help;color:var(--fg-muted);font-size:13px;font-weight:400;border:1px solid var(--border);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;">?</span>
+                            </div>
+                            <div id="jev-container"></div>
+                        </div>
+
+                        <div class="finding-section">
+                            <div class="finding-section-title">
+                                Note (optional)
+                            </div>
+                            <textarea
+                                id="finding-note"
+                                class="finding-note"
+                                placeholder="Enter your review notes here..."
+                                aria-label="Optional reviewer note"
+                            ></textarea>
+                        </div>
+
+                        <div class="finding-buttons">
+                            <button
+                                class="btn-flag"
+                                id="btn-flag"
+                                aria-label="Flag this finding as genuine"
+                            >
+                                🚩 FLAG
+                            </button>
+                            <button
+                                class="btn-dismiss"
+                                id="btn-dismiss"
+                                aria-label="Dismiss this finding"
+                            >
+                                ✅ DISMISS
+                            </button>
+                            <button
+                                class="btn-escalate"
+                                id="btn-escalate"
+                                aria-label="Escalate this finding for further review"
+                            >
+                                ⬆️ ESCALATE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen 4: Summary -->
+                <div id="summary-screen" class="screen">
+                    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--fg);">
+                        Analysis Complete
+                    </h2>
+
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-card-label">Contradictions Found</div>
+                            <div class="summary-card-value" id="stat-found">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-card-label">Passed Validation</div>
+                            <div class="summary-card-value" id="stat-validated">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-card-label">Flagged</div>
+                            <div class="summary-card-value" id="stat-flagged">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-card-label">Dismissed</div>
+                            <div class="summary-card-value" id="stat-dismissed">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-card-label">Escalated</div>
+                            <div class="summary-card-value" id="stat-escalated">0</div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--fg);">
+                        Audit Log
+                    </h3>
+
+                    <div class="audit-table-container">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th>Finding ID</th>
+                                    <th>Tender</th>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>JEV Score</th>
+                                    <th>Decision</th>
+                                    <th>Note</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-log-body">
+                                <tr><td colspan="8" style="text-align: center; color: var(--fg-muted);">No entries yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="button-group">
+                        <button
+                            id="new-analysis-button"
+                            class="btn-primary"
+                            aria-label="Start a new tender analysis"
+                        >
+                            New Analysis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal: Finding Detail -->
+                <div id="finding-modal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-finding-id">
+                    <div class="modal-panel">
+                        <button class="modal-close" id="modal-close-btn" aria-label="Close finding detail">✕</button>
+
+                        <div class="modal-header">
+                            <span id="modal-finding-id" class="modal-title">F-001</span>
+                            <span id="modal-type-badge" class="badge">TYPE</span>
+                            <span id="modal-severity-badge" class="badge">SEVERITY</span>
+                        </div>
+
+                        <div class="modal-comparison">
+                            <div>
+                                <div class="modal-doc-title" id="modal-doc-a-name"></div>
+                                <pre class="excerpt" id="modal-excerpt-a" aria-label="Excerpt from document A"></pre>
+                            </div>
+                            <div>
+                                <div class="modal-doc-title" id="modal-doc-b-name"></div>
+                                <pre class="excerpt" id="modal-excerpt-b" aria-label="Excerpt from document B"></pre>
+                            </div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-label">Why this is a finding</div>
+                            <div id="modal-explanation" class="modal-explanation-text"></div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-label">jev Validation</div>
+                            <div id="modal-jev"></div>
+                        </div>
+
+                        <div class="modal-section modal-decision-row">
+                            <span class="modal-section-label" style="margin-bottom: 0;">Decision:</span>
+                            <span id="modal-decision-badge" class="badge"></span>
+                            <span id="modal-note" style="color: var(--fg-muted); font-size: 13px;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ====================================================================
+        // Application State
+        // ====================================================================
+        const state = {
+            currentScreen: 'upload',
+            sessionId: null,
+            files: [],
+            findingIndex: 0,
+            findingTotal: 0,
+            currentFinding: null,
+            isPolling: false,
+            pollCount: 0,
+        };
+
+        // ====================================================================
+        // Utility: Show/Hide Screens
+        // ====================================================================
+        function showScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(el => {
+                el.classList.remove('active');
+            });
+            const screen = document.getElementById(screenName + '-screen');
+            if (screen) {
+                screen.classList.add('active');
+            }
+            state.currentScreen = screenName;
+        }
+
+        // ====================================================================
+        // Utility: Error Banner
+        // ====================================================================
+        function showError(message) {
+            const banner = document.getElementById('error-banner');
+            banner.textContent = message;
+            banner.classList.add('show');
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 5000);
+        }
+
+        // ====================================================================
+        // Utility: Toast Notification
+        // ====================================================================
+        function showToast(message, duration = 2000) {
+            const toast = document.createElement('div');
+            toast.innerHTML = `<div class="toast" role="status">${message}</div>`;
+            document.body.appendChild(toast.firstChild);
+            const toastEl = toast.firstChild;
+            setTimeout(() => {
+                toastEl.remove();
+            }, duration + 300);
+        }
+
+        // ====================================================================
+        // File Upload: Validation & Display
+        // ====================================================================
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const analyseButton = document.getElementById('analyse-button');
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function validateFile(file) {
+            const errors = [];
+            const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+            if (ext !== '.pdf') {
+                errors.push('Only PDF files are accepted.');
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                errors.push('File exceeds 10 MB limit.');
+            }
+            return errors;
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            let validCount = 0;
+
+            state.files.forEach((file, idx) => {
+                const errors = validateFile(file);
+                const isValid = errors.length === 0;
+                if (isValid) validCount++;
+
+                const item = document.createElement('div');
+                item.className = 'file-item ' + (isValid ? 'valid' : 'invalid');
+                item.innerHTML = `
+                    <div class="file-item-info">
+                        <span class="file-item-name">${file.name}</span>
+                        <span class="file-item-size">${formatFileSize(file.size)}</span>
+                        ${errors.length > 0 ? '<div class="file-item-error">' + errors[0] + '</div>' : ''}
+                    </div>
+                    <div class="file-item-icon"></div>
+                `;
+                fileList.appendChild(item);
+            });
+
+            analyseButton.disabled = validCount < 2;
+        }
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            state.files = Array.from(e.target.files);
+            updateFileList();
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            state.files = Array.from(e.dataTransfer.files);
+            fileInput.files = e.dataTransfer.files;
+            updateFileList();
+        });
+
+        // ====================================================================
+        // File Upload: Submit
+        // ====================================================================
+        analyseButton.addEventListener('click', async () => {
+            analyseButton.disabled = true;
+
+            const formData = new FormData();
+            state.files.forEach(file => {
+                // Only include valid PDFs
+                if (file.name.toLowerCase().endsWith('.pdf') && file.size <= 10 * 1024 * 1024) {
+                    formData.append('files', file);
+                }
+            });
+
+            try {
+                const response = await fetch('/api/analyse', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showError(error.detail || 'Analysis request failed.');
+                    analyseButton.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                state.sessionId = data.session_id;
+                document.getElementById('session-display').style.display = 'block';
+                document.getElementById('session-id-text').textContent = state.sessionId;
+
+                state.findingIndex = 0;
+                state.findingTotal = 0;
+                state.isPolling = true;
+                state.pollCount = 0;
+
+                showScreen('analysing');
+                startPolling();
+            } catch (error) {
+                showError('Request timed out. Check connection.');
+                analyseButton.disabled = false;
+            }
+        });
+
+        // ====================================================================
+        // Polling: Status Check
+        // ====================================================================
+        const messages = [
+            'Extracting documents…',
+            'Comparing clauses…',
+            'Validating findings…',
+        ];
+        let messageIndex = 0;
+
+        function updateSpinnerMessage() {
+            const spinnerLabel = document.getElementById('spinner-message');
+            spinnerLabel.textContent = messages[messageIndex];
+            messageIndex = (messageIndex + 1) % messages.length;
+        }
+
+        async function pollStatus() {
+            if (!state.isPolling || !state.sessionId) return;
+
+            try {
+                const response = await fetch(`/api/status/${state.sessionId}`);
+                if (!response.ok) {
+                    showError('Status check failed. Retrying…');
+                    return;
+                }
+
+                const data = await response.json();
+                const status = data.status;
+
+                if (status === 'running') {
+                    state.pollCount++;
+                    if (state.pollCount % 3 === 0) {
+                        updateSpinnerMessage();
+                    }
+                    // Continue polling
+                } else if (status === 'hitl_pending') {
+                    state.isPolling = false;
+                    state.findingTotal = data.finding_count || state.findingTotal + 1;
+                    state.findingIndex = (state.findingIndex || 0) + 1;
+                    state.currentFinding = data.finding;
+                    displayFinding();
+                    showScreen('hitl');
+                } else if (status === 'complete') {
+                    state.isPolling = false;
+                    displaySummary(data.summary);
+                    showScreen('summary');
+                } else if (status === 'error') {
+                    state.isPolling = false;
+                    showError(data.message || 'Analysis failed.');
+                    showScreen('upload');
+                } else {
+                    // Unknown status, keep polling
+                }
+            } catch (error) {
+                showError('Request timed out. Check connection.');
+            }
+        }
+
+        function startPolling() {
+            updateSpinnerMessage();
+            const interval = setInterval(() => {
+                if (!state.isPolling) {
+                    clearInterval(interval);
+                    return;
+                }
+                pollStatus();
+            }, 2000);
+        }
+
+        // ====================================================================
+        // HITL Review: Display Finding
+        // ====================================================================
+        function displayFinding() {
+            const finding = state.currentFinding;
+            if (!finding) return;
+
+            // Counter
+            document.getElementById('finding-index').textContent = state.findingIndex;
+            document.getElementById('finding-total').textContent = state.findingTotal;
+
+            // Type badge
+            const typeMap = {
+                'deadline': 'badge-deadline',
+                'requirement': 'badge-requirement',
+                'amount': 'badge-amount',
+            };
+            const typeBadge = document.getElementById('finding-type-badge');
+            typeBadge.textContent = finding.contradiction_type.toUpperCase();
+            typeBadge.className = 'badge ' + (typeMap[finding.contradiction_type] || 'badge-deadline');
+
+            // Severity badge
+            const severityMap = {
+                'HIGH': 'badge-high',
+                'MEDIUM': 'badge-medium',
+                'LOW': 'badge-low',
+            };
+            const severityBadge = document.getElementById('finding-severity-badge');
+            severityBadge.textContent = '● ' + finding.severity;
+            severityBadge.className = 'badge ' + (severityMap[finding.severity] || 'badge-medium');
+
+            // Tender ref badge
+            const refBar = document.getElementById('tender-ref-bar');
+            if (finding.tender_ref) {
+                document.getElementById('tender-ref-label').textContent = finding.tender_ref;
+                refBar.style.display = '';
+            } else {
+                refBar.style.display = 'none';
+            }
+
+            // Document names
+            document.getElementById('doc-a-title').textContent = finding.doc_a;
+            document.getElementById('doc-b-title').textContent = finding.doc_b;
+
+            // Excerpts
+            document.getElementById('excerpt-a').textContent = finding.excerpt_a;
+            document.getElementById('excerpt-b').textContent = finding.excerpt_b;
+
+            // Explanation & question
+            document.getElementById('explanation').textContent = finding.explanation;
+            document.getElementById('suggested-question').textContent = finding.suggested_question || '(No question suggested)';
+
+            // JEV bars
+            const jevContainer = document.getElementById('jev-container');
+            jevContainer.innerHTML = '';
+
+            if (!finding.jev_available) {
+                jevContainer.innerHTML = '<div class="jev-unavailable">Validation unavailable</div>';
+            } else {
+                const genuinePercent = Math.round((finding.jev_genuine || 0) * 100);
+                const severityPercent = Math.round((finding.jev_severity || 0) * 100);
+
+                jevContainer.innerHTML = `
+                    <div class="jev-bar">
+                        <div class="jev-bar-label">
+                            <span class="jev-bar-label-left">jev: Genuine</span>
+                            <span class="jev-bar-label-right">${genuinePercent}%</span>
+                        </div>
+                        <div class="jev-bar-progress">
+                            <div class="jev-bar-fill" style="width: ${genuinePercent}%;"></div>
+                        </div>
+                    </div>
+                    <div class="jev-bar" style="margin-top: 16px;">
+                        <div class="jev-bar-label">
+                            <span class="jev-bar-label-left">Severity</span>
+                            <span class="jev-bar-label-right">${severityPercent}%</span>
+                        </div>
+                        <div class="jev-bar-progress">
+                            <div class="jev-bar-fill" style="width: ${severityPercent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Clear note
+            document.getElementById('finding-note').value = '';
+        }
+
+        // ====================================================================
+        // Decision Buttons
+        // ====================================================================
+        document.getElementById('btn-flag').addEventListener('click', () => {
+            submitDecision('flag');
+        });
+
+        document.getElementById('btn-dismiss').addEventListener('click', () => {
+            submitDecision('dismiss');
+        });
+
+        document.getElementById('btn-escalate').addEventListener('click', () => {
+            submitDecision('escalate');
+        });
+
+        async function submitDecision(decision) {
+            if (!state.currentFinding) return;
+
+            const note = document.getElementById('finding-note').value;
+
+            try {
+                const response = await fetch('/api/decision', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: state.sessionId,
+                        finding_id: state.currentFinding.finding_id,
+                        decision: decision,
+                        note: note,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showError(error.detail || 'Decision submission failed.');
+                    return;
+                }
+
+                showToast('Decision recorded');
+
+                // Resume polling
+                state.isPolling = true;
+                showScreen('analysing');
+                startPolling();
+            } catch (error) {
+                showError('Request timed out. Check connection.');
+            }
+        }
+
+        // ====================================================================
+        // Summary Screen
+        // ====================================================================
+        async function displaySummary(summary) {
+            // Fetch audit log first — it is the ground truth for all stats
+            try {
+                const response = await fetch('/api/audit-log');
+                if (!response.ok) {
+                    showError('Failed to load audit log.');
+                    return;
+                }
+
+                const allEntries = await response.json();
+
+                // Filter to current session only
+                const entries = allEntries.filter(e => e.session_id === state.sessionId);
+
+                // Compute stats from audit log rows
+                const flagCount     = entries.filter(e => e.human_decision === 'flag').length;
+                const dismissCount  = entries.filter(e => e.human_decision === 'dismiss').length;
+                const escalateCount = entries.filter(e => e.human_decision === 'escalate').length;
+                const passedCount   = entries.filter(e => e.jev_genuine >= 0.65).length;
+
+                document.getElementById('stat-found').textContent      = entries.length;
+                document.getElementById('stat-validated').textContent  = passedCount;
+                document.getElementById('stat-flagged').textContent    = flagCount;
+                document.getElementById('stat-dismissed').textContent  = dismissCount;
+                document.getElementById('stat-escalated').textContent  = escalateCount;
+
+                displayAuditLog(entries);
+            } catch (error) {
+                showError('Request timed out. Check connection.');
+            }
+        }
+
+        function displayAuditLog(entries) {
+            const tbody = document.getElementById('audit-log-body');
+            tbody.innerHTML = '';
+
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--fg-muted);">No entries yet</td></tr>';
+                return;
+            }
+
+            entries.forEach(entry => {
+                const row = document.createElement('tr');
+                const jevScore = entry.jev_genuine ? Math.round(entry.jev_genuine * 100) + '%' : '—';
+
+                const decisionClass = 'audit-decision-' + (entry.human_decision || '');
+                const decisionText = (entry.human_decision || 'unknown').toUpperCase();
+
+                // Show last segment of tender_ref (e.g. "00046" from "MOFPED/REAP/.../00046")
+                const tenderDisplay = entry.tender_ref
+                    ? ('<span title="' + entry.tender_ref + '" style="font-family:monospace;font-size:11px;">' + entry.tender_ref.split('/').pop() + '</span>')
+                    : '—';
+
+                row.innerHTML = `
+                    <td>${entry.finding_id || '—'}</td>
+                    <td>${tenderDisplay}</td>
+                    <td>${entry.contradiction_type || '—'}</td>
+                    <td>${entry.severity || '—'}</td>
+                    <td>${jevScore}</td>
+                    <td class="audit-cell-decision ${decisionClass}">${decisionText}</td>
+                    <td style="font-size: 12px; color: var(--fg-muted);">${entry.human_note ? entry.human_note.substring(0, 20) + '…' : '—'}</td>
+                    <td style="font-size: 12px; color: var(--fg-muted);">${entry.decided_at ? new Date(entry.decided_at).toLocaleTimeString() : '—'}</td>
+                `;
+                row.addEventListener('click', () => openFindingModal(entry));
+                tbody.appendChild(row);
+            });
+        }
+
+        // ====================================================================
+        // Modal: Finding Detail
+        // ====================================================================
+        function openFindingModal(entry) {
+            // Finding ID + badges
+            document.getElementById('modal-finding-id').textContent = entry.finding_id || '—';
+
+            const typeMap = { deadline: 'badge-deadline', requirement: 'badge-requirement', amount: 'badge-amount' };
+            const tb = document.getElementById('modal-type-badge');
+            tb.textContent = (entry.contradiction_type || '').toUpperCase();
+            tb.className = 'badge ' + (typeMap[entry.contradiction_type] || '');
+
+            const severityMap = { HIGH: 'badge-high', MEDIUM: 'badge-medium', LOW: 'badge-low' };
+            const sb = document.getElementById('modal-severity-badge');
+            sb.textContent = '● ' + (entry.severity || '');
+            sb.className = 'badge ' + (severityMap[entry.severity] || '');
+
+            // Doc names + excerpts
+            document.getElementById('modal-doc-a-name').textContent = entry.doc_a || 'Document A';
+            document.getElementById('modal-excerpt-a').textContent = entry.excerpt_a || '(no excerpt)';
+            document.getElementById('modal-excerpt-a').setAttribute('aria-label', 'Excerpt from ' + (entry.doc_a || 'Document A'));
+
+            document.getElementById('modal-doc-b-name').textContent = entry.doc_b || 'Document B';
+            document.getElementById('modal-excerpt-b').textContent = entry.excerpt_b || '(no excerpt)';
+            document.getElementById('modal-excerpt-b').setAttribute('aria-label', 'Excerpt from ' + (entry.doc_b || 'Document B'));
+
+            // Explanation
+            document.getElementById('modal-explanation').textContent = entry.explanation || '(no explanation)';
+
+            // jev Validation
+            const jevEl = document.getElementById('modal-jev');
+            if (entry.jev_genuine != null && entry.jev_genuine > 0) {
+                const pct = Math.round(entry.jev_genuine * 100);
+                const color = pct >= 65 ? 'var(--dismiss)' : pct >= 40 ? 'var(--escalate)' : 'var(--flag)';
+                jevEl.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--fg-muted);margin-bottom:4px">
+                        <span>Genuine probability</span><span>${pct}%</span>
+                    </div>
+                    <div style="height:6px;background:var(--border);border-radius:3px">
+                        <div style="height:6px;width:${pct}%;background:${color};border-radius:3px"></div>
+                    </div>`;
+            } else {
+                jevEl.innerHTML = '<span style="color:var(--fg-muted);font-size:13px">Validation unavailable</span>';
+            }
+
+            // Decision badge
+            const decMap = { flag: '--flag', dismiss: '--dismiss', escalate: '--escalate' };
+            const db = document.getElementById('modal-decision-badge');
+            db.textContent = (entry.human_decision || '').toUpperCase();
+            db.style.background = `var(${decMap[entry.human_decision] || '--fg-muted'})`;
+            db.style.color = entry.human_decision === 'escalate' ? '#000' : '#fff';
+            db.className = 'badge';
+
+            // Note
+            document.getElementById('modal-note').textContent = entry.human_note || '';
+
+            // Show modal
+            document.getElementById('finding-modal').style.display = 'flex';
+            document.getElementById('modal-close-btn').focus();
+        }
+
+        function closeFindingModal() {
+            document.getElementById('finding-modal').style.display = 'none';
+        }
+
+        // Wire up modal close handlers
+        document.getElementById('modal-close-btn').addEventListener('click', closeFindingModal);
+        document.getElementById('finding-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeFindingModal(); // Click backdrop to close
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeFindingModal();
+        });
+
+        // ====================================================================
+        // Reset: New Analysis
+        // ====================================================================
+        document.getElementById('new-analysis-button').addEventListener('click', () => {
+            state.currentScreen = 'upload';
+            state.sessionId = null;
+            state.files = [];
+            state.findingIndex = 0;
+            state.findingTotal = 0;
+            state.currentFinding = null;
+            state.isPolling = false;
+            state.pollCount = 0;
+
+            fileInput.value = '';
+            fileList.innerHTML = '';
+            analyseButton.disabled = true;
+
+            document.getElementById('session-display').style.display = 'none';
+            document.getElementById('error-banner').classList.remove('show');
+
+            showScreen('upload');
+        });
+    </script>
+</body>
+</html>
