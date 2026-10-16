@@ -197,8 +197,9 @@ def compare_node(state: TenderState) -> dict:
                 logging.info(f"compare_node: group '{group_key}' has only {len(group_chunks)} chunk(s), skipping")
                 continue
 
-            # Run comparators on this group
-            group_contradictions = detector.detect(group_chunks)
+            # Run comparators on this group (pass mode so InvoiceComparator runs in invoice_review)
+            mode = state.get("mode") or "standard"
+            group_contradictions = detector.detect(group_chunks, mode=mode)
             logging.info(
                 f"compare_node: group '{group_key}' ({len(group_chunks)} chunks) → "
                 f"{len(group_contradictions)} contradiction(s)"
@@ -283,6 +284,18 @@ def investigate_node(state: TenderState) -> dict:
                 f"Provide:\n"
                 f"1. A clear plain-language explanation of what changed between versions and its impact on bidders\n"
                 f"2. A specific question the procurement officer should raise about this version change\n"
+                f"3. A severity level (HIGH, MEDIUM, or LOW)\n\n"
+                f"Be concise and precise."
+            )
+        elif mode == "invoice_review":
+            llm_prompt = (
+                f"You are a financial audit expert reviewing invoice documents for discrepancies.\n\n"
+                f"Document A ({contradiction.doc_a}): {contradiction.excerpt_a}\n"
+                f"Document B ({contradiction.doc_b}): {contradiction.excerpt_b}\n"
+                f"Issue Type: {contradiction.contradiction_type}\n\n"
+                f"Provide:\n"
+                f"1. A clear plain-language explanation of the financial discrepancy and its risk to the organization\n"
+                f"2. A specific question the finance controller or auditor should raise to resolve this issue\n"
                 f"3. A severity level (HIGH, MEDIUM, or LOW)\n\n"
                 f"Be concise and precise."
             )

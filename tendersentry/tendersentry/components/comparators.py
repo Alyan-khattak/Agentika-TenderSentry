@@ -36,6 +36,10 @@ from tendersentry.constants import (
     TYPE_AMOUNT,
     TYPE_REQUIREMENT,
     TYPE_SEMANTIC,
+    TYPE_INVOICE,
+    TYPE_DUPLICATE,
+    TYPE_BUDGET_OVERSPEND,
+    TYPE_VAT_MISMATCH,
     SEVERITY_HIGH,
     SEVERITY_MEDIUM,
     SEVERITY_LOW,
@@ -541,6 +545,151 @@ class SemanticComparator:
         return contradictions
 
 
+class InvoiceComparator:
+    """Detect invoice-specific issues: duplicates, budget overruns, VAT math errors, unit price discrepancies.
+
+    All detection is deterministic via regex — no LLM calls.
+    Only runs when ContradictionDetector.detect() is called with mode='invoice_review'.
+    """
+
+    _INV_NUM_RE    = re.compile(r'(?:Invoice|Inv\.?)\s*(?:No\.?|#|Number)?\s*:?\s*([A-Z0-9]{2}[A-Z0-9\-/]{1,18})', re.I)
+    _TOTAL_RE      = re.compile(r'(?:Total|Amount\s+Due|Balance\s+Due|Grand\s+Total|Invoice\s+Total)\s*:?\s*\$?\s*([\d,]+(?:\.\d{2})?)', re.I)
+    _SUBTOTAL_RE   = re.compile(r'(?:Subtotal|Sub-?total|Net\s+Amount)\s*:?\s*\$?\s*([\d,]+(?:\.\d{2})?)', re.I)
+    _TAX_RE        = re.compile(r'(?:VAT|Tax|GST|HST|Sales\s+Tax)\s*(?:\([\d.]+%\))?\s*:?\s*\$?\s*([\d,]+(?:\.\d{2})?)', re.I)
+    _BUDGET_RE     = re.compile(r'(?:Budget|Approved\s+Budget|Budget\s+Allocation|Budgeted\s+Amount)\s*:?\s*\$?\s*([\d,]+(?:\.\d{2})?)', re.I)
+    _UNIT_PRICE_RE = re.compile(r'(?:Unit\s+Price|Rate|Price\s+Per\s+Unit)\s*:?\s*\$?\s*([\d,]+(?:\.\d{2})?)', re.I)
+
+    def __init__(self, config: ComparatorConfig):
+        self.config = config
+
+    @staticmethod
+    def _parse(s: str) -> Optional[float]:
+        try:
+            return float(s.replace(',', ''))
+        except (ValueError, AttributeError):
+            return None
+
+    def _doc_data(self, chunks: list[DocumentChunk]) -> dict:
+        """Combine all chunks per filename and extract invoice fields."""
+        by_doc: dict[str, str] = {}
+        first_ref: dict[str, Optional[str]] = {}
+        for c in chunks:
+            by_doc.setdefault(c.filename, '')
+            by_doc[c.filename] += c.text + '\n'
+            if c.filename not in first_ref:
+                first_ref[c.filename] = c.tender_ref
+        result = {}
+        for fn, text in by_doc.items():
+            result[fn] = {
+                'inv_nums':    [m.group(1) for m in self._INV_NUM_RE.finditer(text)],
+                'totals':      [v for v in (self._parse(m.group(1)) for m in self._TOTAL_RE.finditer(text)) if v],
+                'subtotals':   [v for v in (self._parse(m.group(1)) for m in self._SUBTOTAL_RE.finditer(text)) if v],
+                'taxes':       [v for v in (self._parse(m.group(1)) for m in self._TAX_RE.finditer(text)) if v],
+                'budgets':     [v for v in (self._parse(m.group(1)) for m in self._BUDGET_RE.finditer(text)) if v],
+                'unit_prices': [v for v in (self._parse(m.group(1)) for m in self._UNIT_PRICE_RE.finditer(text)) if v],
+                'tender_ref':  first_ref.get(fn),
+            }
+        return result
+
+    def compare(self, chunks: list[DocumentChunk]) -> list[RawContradiction]:
+        """Find invoice contradictions: duplicates, budget overruns, VAT errors, price discrepancies."""
+        data = self._doc_data(chunks)
+        docs = list(data.keys())
+        if not docs:
+            return []
+
+        contradictions: list[RawContradiction] = []
+        seen: set = set()
+        tol = self.config.amount_tolerance_pct
+
+        # 1. VAT/tax math check — within each document
+        for fn, d in data.items():
+            if d['subtotals'] and d['taxes'] and d['totals']:
+                sub, tax, stated = d['subtotals'][0], d['taxes'][0], d['totals'][0]
+                if stated > 0 and abs(sub + tax - stated) / stated > tol:
+                    key = (TYPE_VAT_MISMATCH, fn, fn)
+                    if key not in seen:
+                        seen.add(key)
+                        contradictions.append(RawContradiction(
+                            finding_id='F-placeholder',
+                            contradiction_type=TYPE_VAT_MISMATCH,
+                            doc_a=fn, excerpt_a=f'Subtotal ${sub:,.2f} + Tax ${tax:,.2f} = ${sub+tax:,.2f}',
+                            doc_b=fn, excerpt_b=f'Stated Total: ${stated:,.2f} (gap: ${abs(sub+tax-stated):,.2f})',
+                            severity=SEVERITY_HIGH,
+                        ))
+
+        # Cross-document checks
+        for i in range(len(docs)):
+            for j in range(i + 1, len(docs)):
+                a, b = docs[i], docs[j]
+                da, db = data[a], data[b]
+
+                # 2. Duplicate invoice number
+                for inv in sorted(set(da['inv_nums']) & set(db['inv_nums'])):
+                    key = (TYPE_DUPLICATE, a, b, inv)
+                    if key not in seen:
+                        seen.add(key)
+                        contradictions.append(RawContradiction(
+                            finding_id='F-placeholder',
+                            contradiction_type=TYPE_DUPLICATE,
+                            doc_a=a, excerpt_a=f'Invoice #{inv} in {a}',
+                            doc_b=b, excerpt_b=f'Invoice #{inv} also in {b} — possible duplicate',
+                            severity=SEVERITY_HIGH,
+                        ))
+
+                # 3. Identical total amounts across docs (duplicate by amount)
+                for amt_a in da['totals']:
+                    for amt_b in db['totals']:
+                        if amt_a > 100 and abs(amt_a - amt_b) / amt_a < 0.001:
+                            key = ('dup_amount', a, b, round(amt_a))
+                            if key not in seen:
+                                seen.add(key)
+                                contradictions.append(RawContradiction(
+                                    finding_id='F-placeholder',
+                                    contradiction_type=TYPE_DUPLICATE,
+                                    doc_a=a, excerpt_a=f'Total: ${amt_a:,.2f}',
+                                    doc_b=b, excerpt_b=f'Total: ${amt_b:,.2f} — identical amounts, verify not duplicate',
+                                    severity=SEVERITY_MEDIUM,
+                                ))
+
+                # 4. Budget vs actuals — one doc has budget, other has invoice exceeding it
+                for budget_doc, budget_d, inv_doc, inv_d in [(a, da, b, db), (b, db, a, da)]:
+                    if budget_d['budgets'] and inv_d['totals']:
+                        budget_amt, inv_amt = budget_d['budgets'][0], inv_d['totals'][0]
+                        if budget_amt > 0 and (inv_amt - budget_amt) / budget_amt > tol:
+                            key = (TYPE_BUDGET_OVERSPEND, budget_doc, inv_doc)
+                            if key not in seen:
+                                seen.add(key)
+                                over_pct = (inv_amt - budget_amt) / budget_amt * 100
+                                contradictions.append(RawContradiction(
+                                    finding_id='F-placeholder',
+                                    contradiction_type=TYPE_BUDGET_OVERSPEND,
+                                    doc_a=budget_doc, excerpt_a=f'Budget: ${budget_amt:,.2f}',
+                                    doc_b=inv_doc, excerpt_b=f'Invoice Total: ${inv_amt:,.2f} (+{over_pct:.1f}% over budget)',
+                                    severity=SEVERITY_HIGH if over_pct > 10 else SEVERITY_MEDIUM,
+                                ))
+
+                # 5. Unit price discrepancy across documents
+                if da['unit_prices'] and db['unit_prices']:
+                    pa, pb = da['unit_prices'][0], db['unit_prices'][0]
+                    if pa > 0 and pb > 0:
+                        diff = abs(pa - pb) / max(pa, pb)
+                        if diff > tol:
+                            key = (TYPE_INVOICE, a, b)
+                            if key not in seen:
+                                seen.add(key)
+                                contradictions.append(RawContradiction(
+                                    finding_id='F-placeholder',
+                                    contradiction_type=TYPE_INVOICE,
+                                    doc_a=a, excerpt_a=f'Unit Price: ${pa:,.2f}',
+                                    doc_b=b, excerpt_b=f'Unit Price: ${pb:,.2f} ({diff*100:.1f}% difference)',
+                                    severity=SEVERITY_HIGH if diff > 0.05 else SEVERITY_MEDIUM,
+                                ))
+
+        logging.info(f'InvoiceComparator.compare: {len(contradictions)} invoice findings')
+        return contradictions
+
+
 class ContradictionDetector:
     """Orchestrator that runs all three comparators and combines results.
 
@@ -560,16 +709,17 @@ class ContradictionDetector:
         self.semantic_cmp = SemanticComparator(config)
         logging.info("ContradictionDetector initialized")
 
-    def detect(self, chunks: list[DocumentChunk]) -> list[RawContradiction]:
-        """Run all three comparators and return combined, renumbered results.
+    def detect(self, chunks: list[DocumentChunk], mode: str = "standard") -> list[RawContradiction]:
+        """Run comparators and return combined, renumbered results.
 
         Args:
             chunks: List of DocumentChunk objects (from extract node).
+            mode: Analysis mode — 'invoice_review' also runs InvoiceComparator.
 
         Returns:
-            List of RawContradiction objects, sorted by type and renumbered F-001, F-002, ...
+            List of RawContradiction objects, renumbered F-001, F-002, ...
         """
-        logging.info(f"ContradictionDetector.detect: running all comparators on {len(chunks)} chunks")
+        logging.info(f"ContradictionDetector.detect: running comparators on {len(chunks)} chunks, mode={mode}")
 
         # Collect results from all comparators (deterministic first, semantic last)
         results = []
@@ -577,14 +727,17 @@ class ContradictionDetector:
         results.extend(self.amount_cmp.compare(chunks))
         results.extend(self.req_cmp.compare(chunks))
         results.extend(self.semantic_cmp.compare(chunks))
+        if mode == "invoice_review":
+            results.extend(InvoiceComparator(self.config).compare(chunks))
 
-        # Deduplicate: keep first contradiction per (type, doc_a, doc_b)
-        # Semantic findings use excerpt_a as tiebreaker — same pair can have multiple distinct semantic issues
+        # Deduplicate: types that can have multiple findings per doc pair use excerpt as tiebreaker
+        _multi_per_pair = {TYPE_SEMANTIC, TYPE_DUPLICATE, TYPE_INVOICE, TYPE_BUDGET_OVERSPEND, TYPE_VAT_MISMATCH}
         seen: set = set()
         unique = []
         for r in results:
-            key = (r.contradiction_type, r.doc_a, r.doc_b) if r.contradiction_type != TYPE_SEMANTIC \
-                else (r.contradiction_type, r.doc_a, r.doc_b, r.excerpt_a[:60])
+            key = (r.contradiction_type, r.doc_a, r.doc_b, r.excerpt_a[:60]) \
+                if r.contradiction_type in _multi_per_pair \
+                else (r.contradiction_type, r.doc_a, r.doc_b)
             if key not in seen:
                 seen.add(key)
                 unique.append(r)

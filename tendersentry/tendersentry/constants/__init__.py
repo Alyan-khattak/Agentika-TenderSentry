@@ -90,6 +90,10 @@ TYPE_REQUIREMENT = "requirement"  # RequirementComparator: conflicting ISO/manda
 TYPE_AMOUNT = "amount"          # AmountComparator: stated total ≠ sum of line items
 TYPE_MISSING = "missing"        # Data not found in one or more documents
 TYPE_SEMANTIC = "semantic"      # SemanticComparator: LLM-detected factual/scope contradictions
+TYPE_INVOICE = "invoice"        # InvoiceComparator: unit price discrepancy across documents
+TYPE_DUPLICATE = "duplicate"    # InvoiceComparator: duplicate invoice number or identical total
+TYPE_BUDGET_OVERSPEND = "budget_overspend"  # InvoiceComparator: invoice total exceeds budget
+TYPE_VAT_MISMATCH = "vat_mismatch"  # InvoiceComparator: subtotal + tax ≠ stated total
 
 
 # ============================================================================

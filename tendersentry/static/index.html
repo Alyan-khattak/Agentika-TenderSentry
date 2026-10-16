@@ -573,6 +573,11 @@
         .badge-deadline    { background: rgba(59, 130, 246, 0.15);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
         .badge-requirement { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
         .badge-amount      { background: rgba(249, 115, 22, 0.15);  color: #fb923c; border: 1px solid rgba(249,115,22,0.2); }
+        .badge-semantic    { background: rgba(34, 211, 238, 0.12);  color: #22d3ee; border: 1px solid rgba(34,211,238,0.25); }
+        .badge-invoice     { background: rgba(34, 211, 238, 0.12);  color: #22d3ee; border: 1px solid rgba(34,211,238,0.25); }
+        .badge-duplicate   { background: rgba(244, 63, 94, 0.12);   color: #fb7185; border: 1px solid rgba(244,63,94,0.25); }
+        .badge-budget      { background: rgba(167, 139, 250, 0.12); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.25); }
+        .badge-vat         { background: rgba(251, 146, 60, 0.12);  color: #fdba74; border: 1px solid rgba(251,146,60,0.25); }
         .badge-high        { background: rgba(239, 68, 68, 0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
         .badge-medium      { background: rgba(245, 158, 11, 0.15);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
         .badge-low         { background: rgba(16, 185, 129, 0.15);  color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
@@ -639,23 +644,39 @@
         .deadline-alert svg { flex-shrink: 0; }
 
         /* Version comparison toggle (Feature 22) */
-        .mode-toggle-row {
+        .mode-tabs {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 0 2px;
+            gap: 4px;
+            margin: 20px 0 0;
+            padding: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
         }
-        .mode-toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 13px;
+        .mode-tab {
+            flex: 1;
+            height: 36px;
+            min-width: unset;
+            border-radius: 8px;
+            background: transparent;
             color: var(--fg-muted);
-            user-select: none;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 200ms var(--ease-out);
+            letter-spacing: 0.01em;
         }
-        .mode-toggle-label input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
-        .mode-toggle-hint { font-size: 11px; color: var(--fg-muted); opacity: 0.6; }
+        .mode-tab.active {
+            background: var(--surface-raised);
+            color: var(--fg);
+            border-color: var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .mode-tab:hover:not(.active) {
+            color: var(--fg);
+            background: rgba(255,255,255,0.03);
+        }
 
         /* Two-column excerpt grid */
         .finding-excerpt-row {
@@ -1291,12 +1312,10 @@
 
                     <div id="file-list" class="file-list"></div>
 
-                    <div class="mode-toggle-row">
-                        <label class="mode-toggle-label">
-                            <input type="checkbox" id="version-mode-toggle" aria-label="Enable version comparison mode">
-                            <span>Version Comparison Mode</span>
-                            <span class="mode-toggle-hint">— compare two versions of the same document</span>
-                        </label>
+                    <div class="mode-tabs" role="tablist" aria-label="Analysis mode">
+                        <button class="mode-tab active" data-mode="standard" role="tab" aria-selected="true">Tender Analysis</button>
+                        <button class="mode-tab" data-mode="version_comparison" role="tab" aria-selected="false">Version Compare</button>
+                        <button class="mode-tab" data-mode="invoice_review" role="tab" aria-selected="false">Invoice Review</button>
                     </div>
 
                     <div class="button-group">
@@ -1304,14 +1323,14 @@
                             id="analyse-button"
                             class="btn-primary"
                             disabled
-                            aria-label="Start tender analysis"
+                            aria-label="Start analysis"
                         >
                             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                                 <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/>
                                 <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
                                 <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
                             </svg>
-                            Analyse Tender
+                            <span id="analyse-btn-label">Analyse Tender</span>
                         </button>
                     </div>
                 </div>
@@ -1617,17 +1636,21 @@
             currentFinding: null,
             isPolling: false,
             pollCount: 0,
-            versionMode: false,
+            activeTab: 'standard',
         };
 
         // ====================================================================
         // Feature 6: Excerpt highlight helper
         // ====================================================================
         const _highlightPatterns = {
-            deadline:    /\b(\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}|\d{1,2}[-/]\d{1,2}[-/]\d{4}|\d{4}-\d{2}-\d{2})\b/gi,
-            amount:      /\$[\d,]+(?:\.\d{2})?/g,
-            requirement: /\b(mandatory|optional|or equivalent|ISO 9001:2015|ISO 9001|shall|must|should|may(?= )|certified|registered|prior experience|non-refundable|refundable|fixed price|provisional sum)\b/gi,
-            semantic:    null,
+            deadline:        /\b(\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}|\d{1,2}[-/]\d{1,2}[-/]\d{4}|\d{4}-\d{2}-\d{2})\b/gi,
+            amount:          /\$[\d,]+(?:\.\d{2})?/g,
+            requirement:     /\b(mandatory|optional|or equivalent|ISO 9001:2015|ISO 9001|shall|must|should|may(?= )|certified|registered|prior experience|non-refundable|refundable|fixed price|provisional sum)\b/gi,
+            semantic:        null,
+            invoice:         /\$[\d,]+(?:\.\d{2})?/g,
+            duplicate:       /(?:Invoice|Inv\.?)\s*#?\s*[A-Z0-9\-/]+|\$[\d,]+(?:\.\d{2})?/gi,
+            budget_overspend:/\$[\d,]+(?:\.\d{2})?|(?:Budget|Invoice\s+Total):\s*\$[\d,]+/gi,
+            vat_mismatch:    /\$[\d,]+(?:\.\d{2})?|(?:Subtotal|Tax|VAT|Total)/gi,
         };
 
         function highlightExcerpt(text, type) {
@@ -1795,6 +1818,31 @@
         });
 
         // ====================================================================
+        // Mode Tab Switching
+        // ====================================================================
+        const _tabTitles = {
+            standard:           ['Upload Tender Documents',  '2–5 PDF files · max 10 MB each',                                  'Analyse Tender'],
+            version_comparison: ['Upload Document Versions', '2 PDFs: original + updated version · max 10 MB each',             'Compare Versions'],
+            invoice_review:     ['Upload Invoice Documents', '2–5 PDFs: budget, purchase orders, or invoices · max 10 MB each', 'Analyse Invoices'],
+        };
+
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.mode-tab').forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                state.activeTab = tab.dataset.mode;
+                const [title, hint, btnLabel] = _tabTitles[tab.dataset.mode] || _tabTitles.standard;
+                document.querySelector('#upload-screen .screen-title').textContent = title;
+                document.querySelector('.upload-hint').textContent = hint;
+                document.getElementById('analyse-btn-label').textContent = btnLabel;
+            });
+        });
+
+        // ====================================================================
         // File Upload: Submit
         // ====================================================================
         analyseButton.addEventListener('click', async () => {
@@ -1806,8 +1854,7 @@
                     formData.append('files', file);
                 }
             });
-            state.versionMode = document.getElementById('version-mode-toggle').checked;
-            formData.append('mode', state.versionMode ? 'version_comparison' : 'standard');
+            formData.append('mode', state.activeTab || 'standard');
 
             try {
                 const response = await fetch('/api/analyse', {
@@ -1906,7 +1953,8 @@
                     setDecisionButtons(false);
                     checkDeadlineAlert(data.finding);
                     document.querySelector('#hitl-screen .screen-title').textContent =
-                        state.versionMode ? 'Review Change' : 'Review Finding';
+                        state.activeTab === 'version_comparison' ? 'Review Change' :
+                        state.activeTab === 'invoice_review'     ? 'Review Invoice Finding' : 'Review Finding';
                     displayFinding();
                     showScreen('hitl');
                 } else if (status === 'complete') {
@@ -1944,9 +1992,14 @@
 
             // Type badge
             const typeMap = {
-                'deadline':    'badge-deadline',
-                'requirement': 'badge-requirement',
-                'amount':      'badge-amount',
+                'deadline':        'badge-deadline',
+                'requirement':     'badge-requirement',
+                'amount':          'badge-amount',
+                'semantic':        'badge-semantic',
+                'invoice':         'badge-invoice',
+                'duplicate':       'badge-duplicate',
+                'budget_overspend':'badge-budget',
+                'vat_mismatch':    'badge-vat',
             };
             const typeBadge = document.getElementById('finding-type-badge');
             typeBadge.textContent = finding.contradiction_type.toUpperCase();
@@ -1969,9 +2022,9 @@
 
             // Doc names & excerpts
             document.getElementById('doc-a-title').textContent =
-                state.versionMode ? 'Version 1 — ' + finding.doc_a : finding.doc_a;
+                state.activeTab === 'version_comparison' ? 'Version 1 — ' + finding.doc_a : finding.doc_a;
             document.getElementById('doc-b-title').textContent =
-                state.versionMode ? 'Version 2 — ' + finding.doc_b : finding.doc_b;
+                state.activeTab === 'version_comparison' ? 'Version 2 — ' + finding.doc_b : finding.doc_b;
             document.getElementById('excerpt-a').innerHTML = highlightExcerpt(finding.excerpt_a, finding.contradiction_type);
             document.getElementById('excerpt-b').innerHTML = highlightExcerpt(finding.excerpt_b, finding.contradiction_type);
 
@@ -2189,7 +2242,11 @@
         function openFindingModal(entry) {
             document.getElementById('modal-finding-id').textContent = entry.finding_id || '—';
 
-            const typeMap = { deadline: 'badge-deadline', requirement: 'badge-requirement', amount: 'badge-amount' };
+            const typeMap = {
+                deadline: 'badge-deadline', requirement: 'badge-requirement', amount: 'badge-amount',
+                semantic: 'badge-semantic', invoice: 'badge-invoice', duplicate: 'badge-duplicate',
+                budget_overspend: 'badge-budget', vat_mismatch: 'badge-vat',
+            };
             const tb = document.getElementById('modal-type-badge');
             tb.textContent = (entry.contradiction_type || '').toUpperCase();
             tb.className   = 'badge ' + (typeMap[entry.contradiction_type] || '');
@@ -2346,8 +2403,14 @@
             state.findingTotal  = 0;
             state.currentFinding = null;
             state.pollCount     = 0;
-            state.versionMode   = false;
-            document.getElementById('version-mode-toggle').checked = false;
+            state.activeTab = 'standard';
+            document.querySelectorAll('.mode-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.mode === 'standard');
+                t.setAttribute('aria-selected', t.dataset.mode === 'standard' ? 'true' : 'false');
+            });
+            document.querySelector('#upload-screen .screen-title').textContent = 'Upload Tender Documents';
+            document.querySelector('.upload-hint').textContent = '2–5 PDF files · max 10 MB each';
+            document.getElementById('analyse-btn-label').textContent = 'Analyse Tender';
             document.getElementById('deadline-alert').style.display = 'none';
 
             fileInput.value = '';
