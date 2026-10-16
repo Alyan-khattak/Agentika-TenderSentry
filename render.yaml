@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: tendersentry
+    runtime: docker
+    dockerfilePath: ./tendersentry/Dockerfile
+    dockerContext: ./tendersentry
+    envVars:
+      - key: GROQ_API_KEY_1
+        sync: false
+      - key: GROQ_API_KEY_2
+        sync: false
+      - key: GROQ_API_KEY_3
+        sync: false
+      - key: TYPESAFE_API_KEY
+        sync: false
