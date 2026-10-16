@@ -6,95 +6,191 @@
     <title>TenderSentry</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         /* ====================================================================
-           CSS Custom Properties (Design System)
+           Design Tokens — Forensic Intelligence Theme
            ==================================================================== */
         :root {
-            --bg: #0f1520;
-            --surface: #1a2235;
-            --border: #2a3650;
-            --fg: #e8edf5;
-            --fg-muted: #7a8fa8;
-            --accent: #4d7fff;
-            --flag: #ef4444;
-            --dismiss: #22c55e;
-            --escalate: #f59e0b;
-            --severity-high: #ef4444;
-            --severity-medium: #f59e0b;
-            --severity-low: #22c55e;
+            /* Base surfaces */
+            --bg:              #05060e;
+            --surface:         #0c1526;
+            --surface-raised:  #111f35;
+            --surface-glass:   rgba(12, 21, 38, 0.88);
+
+            /* Borders */
+            --border:          rgba(255, 255, 255, 0.07);
+            --border-accent:   rgba(59, 130, 246, 0.22);
+            --border-glow:     rgba(59, 130, 246, 0.45);
+
+            /* Text */
+            --fg:              #e2e8f5;
+            --fg-muted:        #637a9e;
+            --fg-faint:        #2d3d58;
+
+            /* Semantic colours */
+            --accent:          #3b82f6;
+            --accent-dim:      rgba(59, 130, 246, 0.12);
+            --amber:           #f59e0b;
+            --amber-dim:       rgba(245, 158, 11, 0.12);
+            --flag:            #ef4444;
+            --flag-dim:        rgba(239, 68, 68, 0.12);
+            --dismiss:         #10b981;
+            --dismiss-dim:     rgba(16, 185, 129, 0.12);
+            --escalate:        #f59e0b;
+            --escalate-dim:    rgba(245, 158, 11, 0.12);
+
+            /* Severity */
+            --sev-high:        #ef4444;
+            --sev-medium:      #f59e0b;
+            --sev-low:         #10b981;
+
+            /* Badge type colours */
+            --type-deadline:   #3b82f6;
+            --type-requirement: #8b5cf6;
+            --type-amount:     #f97316;
+
+            /* Easing */
+            --ease-out:        cubic-bezier(0.32, 0.72, 0, 1);
+            --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* ====================================================================
-           Global Typography & Layout
+           Reset & Base
            ==================================================================== */
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        body {
-            font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: var(--bg);
-            color: var(--fg);
-            line-height: 1.6;
-            font-size: 14px;
-            font-weight: 400;
         }
 
         html, body {
             height: 100%;
         }
 
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+            line-height: 1.6;
+            font-size: 14px;
+            font-weight: 400;
+            /* Subtle mesh gradient background */
+            background-image:
+                radial-gradient(ellipse at 15% 40%, rgba(59, 130, 246, 0.055) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 15%, rgba(245, 158, 11, 0.035) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(139, 92, 246, 0.03) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
         /* ====================================================================
-           App Container & Layout
+           App Shell
            ==================================================================== */
         .app-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100dvh;
         }
 
+        /* ====================================================================
+           Header — glassmorphism sticky bar
+           ==================================================================== */
         .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
+            padding: 0 24px;
+            height: 60px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            background-color: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
         }
 
         .app-name {
-            font-size: 22px;
+            font-size: 17px;
             font-weight: 700;
             color: var(--fg);
+            letter-spacing: -0.01em;
         }
 
-        .session-id {
-            font-size: 12px;
+        .app-name span {
+            color: var(--accent);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .session-pill {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: var(--accent-dim);
+            border: 1px solid var(--border-accent);
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
             color: var(--fg-muted);
-            font-family: 'Courier New', monospace;
         }
 
+        .session-pill.visible {
+            display: flex;
+        }
+
+        .session-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ====================================================================
+           Content Area
+           ==================================================================== */
         .app-content {
             flex: 1;
-            overflow-y: auto;
-            padding: 24px;
             display: flex;
             justify-content: center;
+            padding: 32px 16px 48px;
         }
 
         .panel-container {
-            max-width: 780px;
+            max-width: 800px;
             width: 100%;
         }
 
         /* ====================================================================
-           Screen Management (show/hide)
+           Screen Management
            ==================================================================== */
         .screen {
             display: none;
@@ -105,39 +201,104 @@
         }
 
         /* ====================================================================
+           Screen title
+           ==================================================================== */
+        .screen-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--accent-dim);
+            border: 1px solid var(--border-accent);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .screen-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--fg);
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+
+        /* ====================================================================
+           Double-Bezel Card Architecture
+           ==================================================================== */
+        .bezel-outer {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px;
+        }
+
+        .bezel-inner {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        /* ====================================================================
            Upload Screen
            ==================================================================== */
         .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: 8px;
-            padding: 40px 24px;
+            position: relative;
+            padding: 48px 32px;
             text-align: center;
             cursor: pointer;
-            transition: border-color 0.2s, background-color 0.2s;
-            background-color: var(--surface);
+            transition: all 500ms var(--ease-out);
+            /* Animated dashed border via background-image */
+            background-image:
+                repeating-linear-gradient(0deg, var(--fg-faint), var(--fg-faint) 8px, transparent 8px, transparent 16px),
+                repeating-linear-gradient(90deg, var(--fg-faint), var(--fg-faint) 8px, transparent 8px, transparent 16px),
+                repeating-linear-gradient(180deg, var(--fg-faint), var(--fg-faint) 8px, transparent 8px, transparent 16px),
+                repeating-linear-gradient(270deg, var(--fg-faint), var(--fg-faint) 8px, transparent 8px, transparent 16px);
+            background-size: 1px 100%, 100% 1px, 1px 100%, 100% 1px;
+            background-position: 0 0, 0 0, 100% 0, 0 100%;
+            background-repeat: no-repeat;
+            border-radius: 16px;
         }
 
-        .upload-area:hover {
-            border-color: var(--accent);
-            background-color: rgba(77, 127, 255, 0.05);
-        }
-
+        .upload-area:hover,
         .upload-area.drag-over {
-            border-color: var(--accent);
-            background-color: rgba(77, 127, 255, 0.1);
+            background-color: var(--accent-dim);
+            background-image:
+                repeating-linear-gradient(0deg, var(--accent), var(--accent) 8px, transparent 8px, transparent 16px),
+                repeating-linear-gradient(90deg, var(--accent), var(--accent) 8px, transparent 8px, transparent 16px),
+                repeating-linear-gradient(180deg, var(--accent), var(--accent) 8px, transparent 8px, transparent 16px),
+                repeating-linear-gradient(270deg, var(--accent), var(--accent) 8px, transparent 8px, transparent 16px);
         }
 
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            display: block;
+        .upload-icon-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--accent-dim);
+            border: 1px solid var(--border-accent);
+            border-radius: 18px;
+            transition: transform 400ms var(--ease-spring);
+        }
+
+        .upload-area:hover .upload-icon-wrap {
+            transform: translateY(-4px) scale(1.06);
         }
 
         .upload-label {
-            font-size: 14px;
-            color: var(--fg);
             display: block;
-            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--fg);
+            margin-bottom: 6px;
         }
 
         .upload-hint {
@@ -149,8 +310,11 @@
             display: none;
         }
 
+        /* ====================================================================
+           File List
+           ==================================================================== */
         .file-list {
-            margin-top: 24px;
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -160,30 +324,39 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            background-color: var(--surface);
-            border-radius: 4px;
+            padding: 12px 16px;
+            background: var(--surface-raised);
+            border-radius: 10px;
+            border: 1px solid var(--border);
             border-left: 3px solid var(--accent);
             font-size: 13px;
+            transition: all 300ms var(--ease-out);
+            /* Reveal animation */
+            animation: slide-in 300ms var(--ease-out) both;
         }
 
         .file-item.invalid {
             border-left-color: var(--flag);
         }
 
-        .file-item-info {
-            flex: 1;
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
+
+        .file-item-info { flex: 1; }
 
         .file-item-name {
             display: block;
             color: var(--fg);
+            font-weight: 500;
             margin-bottom: 2px;
         }
 
         .file-item-size {
             font-size: 11px;
             color: var(--fg-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .file-item-error {
@@ -192,19 +365,110 @@
             margin-top: 4px;
         }
 
-        .file-item-icon {
+        .file-item-status {
             margin-left: 12px;
-            font-size: 16px;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .file-item.valid .file-item-icon::before {
-            content: '✓';
-            color: var(--dismiss);
+        /* ====================================================================
+           Buttons
+           ==================================================================== */
+        button {
+            min-width: 120px;
+            height: 44px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.01em;
+            transition: all 300ms var(--ease-out);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
         }
 
-        .file-item.invalid .file-item-icon::before {
-            content: '✕';
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4f93ff;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: var(--surface-raised);
+            color: var(--fg-faint);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Decision buttons — pill shape, wider */
+        .btn-flag {
+            background: var(--flag-dim);
             color: var(--flag);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            flex: 1;
+            border-radius: 10px;
+        }
+        .btn-flag:hover:not(:disabled) {
+            background: var(--flag);
+            color: #fff;
+            border-color: var(--flag);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-dismiss {
+            background: var(--dismiss-dim);
+            color: var(--dismiss);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            flex: 1;
+            border-radius: 10px;
+        }
+        .btn-dismiss:hover:not(:disabled) {
+            background: var(--dismiss);
+            color: #fff;
+            border-color: var(--dismiss);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-escalate {
+            background: var(--escalate-dim);
+            color: var(--escalate);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            flex: 1;
+            border-radius: 10px;
+        }
+        .btn-escalate:hover:not(:disabled) {
+            background: var(--escalate);
+            color: #1a0a00;
+            border-color: var(--escalate);
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
         }
 
         .button-group {
@@ -215,82 +479,48 @@
         }
 
         /* ====================================================================
-           Buttons
-           ==================================================================== */
-        button {
-            min-width: 120px;
-            height: 44px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: filter 0.2s, transform 0.1s;
-            font-family: inherit;
-        }
-
-        button:hover {
-            filter: brightness(0.9);
-        }
-
-        button:active {
-            transform: scale(0.97);
-        }
-
-        button:focus {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-
-        .btn-primary {
-            background-color: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:disabled {
-            background-color: var(--border);
-            color: var(--fg-muted);
-            cursor: not-allowed;
-            filter: none;
-        }
-
-        .btn-flag {
-            background-color: var(--flag);
-            color: white;
-            flex: 1;
-        }
-
-        .btn-dismiss {
-            background-color: var(--dismiss);
-            color: white;
-            flex: 1;
-        }
-
-        .btn-escalate {
-            background-color: var(--escalate);
-            color: #1a1a1a;
-            flex: 1;
-        }
-
-        /* ====================================================================
-           Analysing Screen
+           Analysing Screen — Concentric-ring spinner
            ==================================================================== */
         .spinner-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 60px 24px;
+            padding: 80px 24px;
         }
 
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
+        .spinner-rings {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 32px;
+        }
+
+        .ring {
+            position: absolute;
+            inset: 0;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 24px;
+            border: 2px solid transparent;
+        }
+
+        .ring-outer {
+            border-top-color: var(--accent);
+            border-right-color: rgba(59, 130, 246, 0.2);
+            animation: spin 1.6s var(--ease-out) infinite;
+        }
+
+        .ring-mid {
+            inset: 10px;
+            border-top-color: var(--amber);
+            border-right-color: rgba(245, 158, 11, 0.2);
+            animation: spin 1.1s linear infinite reverse;
+        }
+
+        .ring-inner {
+            inset: 22px;
+            border: 2px solid var(--border);
+            border-top-color: var(--dismiss);
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
@@ -299,190 +529,222 @@
 
         .spinner-label {
             font-size: 14px;
-            color: var(--fg);
+            font-weight: 500;
+            color: var(--fg-muted);
             text-align: center;
-            min-height: 20px;
+            min-height: 22px;
+            letter-spacing: 0.01em;
+        }
+
+        .spinner-phase-dots {
+            display: flex;
+            gap: 6px;
+            margin-top: 16px;
+        }
+
+        .phase-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--fg-faint);
+            transition: background 400ms var(--ease-out);
+        }
+
+        .phase-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
         }
 
         /* ====================================================================
-           Badge Component
+           Badges
            ==================================================================== */
         .badge {
-            display: inline-block;
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 11px;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 6px;
+            padding: 3px 9px;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
         }
 
-        .badge-deadline {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        .badge-requirement {
-            background-color: #8b5cf6;
-            color: white;
-        }
-
-        .badge-amount {
-            background-color: #f97316;
-            color: white;
-        }
-
-        .badge-high {
-            background-color: var(--severity-high);
-            color: white;
-        }
-
-        .badge-medium {
-            background-color: var(--severity-medium);
-            color: #1a1a1a;
-        }
-
-        .badge-low {
-            background-color: var(--severity-low);
-            color: white;
-        }
+        .badge-deadline    { background: rgba(59, 130, 246, 0.15);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+        .badge-requirement { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
+        .badge-amount      { background: rgba(249, 115, 22, 0.15);  color: #fb923c; border: 1px solid rgba(249,115,22,0.2); }
+        .badge-high        { background: rgba(239, 68, 68, 0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .badge-medium      { background: rgba(245, 158, 11, 0.15);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+        .badge-low         { background: rgba(16, 185, 129, 0.15);  color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
 
         /* ====================================================================
-           HITL Review Screen
+           HITL Finding Panel
            ==================================================================== */
         .finding-panel {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
             overflow: hidden;
-            margin-bottom: 24px;
         }
 
         .finding-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.015);
         }
 
         .finding-counter {
-            font-size: 13px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
             color: var(--fg-muted);
+        }
+
+        .finding-counter strong {
+            color: var(--fg);
+            font-weight: 500;
         }
 
         .finding-badges {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
 
-        .finding-badges .badge {
-            margin: 0;
+        /* Tender ref bar */
+        .tender-ref-bar {
+            display: none;
+            padding: 8px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(59, 130, 246, 0.04);
+            font-size: 11px;
+            color: var(--fg-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
+        .tender-ref-bar strong {
+            color: var(--accent);
+        }
+
+        /* Two-column excerpt grid */
         .finding-excerpt-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1px;
-            background-color: var(--border);
+            gap: 0;
+            border-bottom: 1px solid var(--border);
         }
 
         @media (max-width: 639px) {
-            .finding-excerpt-row {
-                grid-template-columns: 1fr;
-            }
+            .finding-excerpt-row { grid-template-columns: 1fr; }
         }
 
         .finding-column {
-            padding: 16px;
-            background-color: var(--surface);
+            padding: 20px;
+        }
+
+        .finding-column:first-child {
+            border-right: 1px solid var(--border);
+        }
+
+        @media (max-width: 639px) {
+            .finding-column:first-child {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
         }
 
         .finding-doc-title {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: 700;
             color: var(--fg-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border);
         }
 
         .excerpt {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-left: 3px solid var(--accent);
-            padding: 12px;
-            border-radius: 4px;
-            font-family: 'Courier New', 'Monaco', monospace;
-            font-size: 13px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 2px solid var(--accent);
+            padding: 12px 14px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
             color: var(--fg);
             overflow-x: auto;
             white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.5;
+            word-break: break-word;
+            line-height: 1.6;
         }
 
         .finding-section {
-            padding: 16px;
+            padding: 16px 20px;
             border-top: 1px solid var(--border);
         }
 
         .finding-section-title {
-            font-size: 11px;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
             color: var(--fg-muted);
             margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
+        }
+
+        .section-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            opacity: 0.7;
         }
 
         .finding-section-content {
             font-size: 14px;
             color: var(--fg);
-            line-height: 1.6;
+            line-height: 1.65;
         }
 
         /* ====================================================================
-           JEV Bar Component
+           JEV Validation Bars
            ==================================================================== */
         .jev-bar {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 7px;
+        }
+
+        .jev-bar + .jev-bar {
+            margin-top: 14px;
         }
 
         .jev-bar-label {
             display: flex;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 12px;
+            color: var(--fg-muted);
+        }
+
+        .jev-bar-label-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
             color: var(--fg);
         }
 
-        .jev-bar-label-left {
-            flex: 1;
-        }
-
-        .jev-bar-label-right {
-            text-align: right;
-        }
-
-        .jev-bar-progress {
-            height: 8px;
-            background-color: var(--border);
-            border-radius: 4px;
+        .jev-bar-track {
+            height: 6px;
+            background: var(--fg-faint);
+            border-radius: 3px;
             overflow: hidden;
-            position: relative;
         }
 
         .jev-bar-fill {
             height: 100%;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #22c55e 0%, #f59e0b 60%, #ef4444 100%);
-            transition: width 0.3s ease;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--dismiss) 0%, var(--amber) 55%, var(--flag) 100%);
+            transition: width 600ms var(--ease-out);
         }
 
         .jev-unavailable {
@@ -492,80 +754,151 @@
         }
 
         /* ====================================================================
-           Finding Note Input
+           Finding Note
            ==================================================================== */
         .finding-note {
             width: 100%;
-            padding: 12px;
-            background-color: rgba(0, 0, 0, 0.2);
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.25);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 8px;
             color: var(--fg);
-            font-family: inherit;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 13px;
             resize: vertical;
-            min-height: 60px;
+            min-height: 64px;
+            transition: border-color 250ms var(--ease-out), background 250ms var(--ease-out);
         }
 
         .finding-note:focus {
             outline: none;
-            border-color: var(--accent);
-            background-color: rgba(77, 127, 255, 0.05);
+            border-color: var(--border-glow);
+            background: var(--accent-dim);
         }
 
         .finding-buttons {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             margin-top: 16px;
         }
 
         @media (max-width: 639px) {
-            .finding-buttons {
-                flex-direction: column;
-            }
-
-            .btn-flag, .btn-dismiss, .btn-escalate {
-                width: 100%;
-                flex: none;
-            }
+            .finding-buttons { flex-direction: column; }
+            .btn-flag, .btn-dismiss, .btn-escalate { flex: none; width: 100%; }
         }
+
+        /* ====================================================================
+           JEV info tooltip button (inline)
+           ==================================================================== */
+        .jev-info {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1px solid var(--fg-faint);
+            background: none;
+            color: var(--fg-muted);
+            font-size: 9px;
+            font-weight: 700;
+            cursor: help;
+            min-width: unset;
+            height: 15px;
+            transition: none;
+            font-family: serif;
+        }
+
+        .jev-info:hover { border-color: var(--fg-muted); }
 
         /* ====================================================================
            Summary Screen
            ==================================================================== */
-        .summary-cards {
+        /* Bento stats grid */
+        .summary-bento {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
             margin-bottom: 32px;
         }
 
-        .summary-card {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
+        @media (max-width: 639px) {
+            .summary-bento { grid-template-columns: repeat(2, 1fr); }
+            .summary-bento .stat-card:first-child { grid-column: span 2; }
         }
 
-        .summary-card-label {
-            font-size: 12px;
+        .stat-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+            /* reveal */
+            opacity: 0;
+            transform: translateY(16px);
+        }
+
+        .stat-card.revealed {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out), box-shadow 300ms var(--ease-out);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--stat-color, var(--accent));
+        }
+
+        .stat-card[data-type="found"]     { --stat-color: var(--accent); }
+        .stat-card[data-type="validated"] { --stat-color: #8b5cf6; }
+        .stat-card[data-type="flagged"]   { --stat-color: var(--flag); }
+        .stat-card[data-type="dismissed"] { --stat-color: var(--dismiss); }
+        .stat-card[data-type="escalated"] { --stat-color: var(--amber); }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 600;
             color: var(--fg-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
         }
 
-        .summary-card-value {
-            font-size: 28px;
+        .stat-value {
+            font-size: 32px;
             font-weight: 700;
-            color: var(--accent);
+            color: var(--stat-color, var(--accent));
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ====================================================================
+           Audit Table
+           ==================================================================== */
+        .audit-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
         }
 
         .audit-table-container {
-            background-color: var(--surface);
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 14px;
             overflow-x: auto;
             margin-bottom: 32px;
         }
@@ -573,144 +906,108 @@
         .audit-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .audit-table th {
-            background-color: var(--border);
+            background: rgba(255, 255, 255, 0.025);
             color: var(--fg-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
             font-weight: 600;
-            padding: 12px;
+            padding: 11px 14px;
             text-align: left;
-            font-size: 11px;
+            font-size: 10px;
+            border-bottom: 1px solid var(--border);
         }
 
         .audit-table td {
-            padding: 12px;
+            padding: 11px 14px;
             border-top: 1px solid var(--border);
             color: var(--fg);
-            max-width: 120px;
+            max-width: 140px;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .audit-table tr:hover {
-            background-color: rgba(77, 127, 255, 0.05);
+        #audit-log-body tr {
+            cursor: pointer;
+            transition: background 200ms var(--ease-out);
         }
 
-        .audit-cell-decision {
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 0.05em;
+        #audit-log-body tr:hover {
+            background: var(--accent-dim);
         }
 
-        .audit-decision-flag {
-            color: var(--flag);
+        .audit-cell-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
         }
 
-        .audit-decision-dismiss {
-            color: var(--dismiss);
-        }
-
-        .audit-decision-escalate {
-            color: var(--escalate);
-        }
+        .audit-decision-flag    { color: var(--flag);    font-weight: 600; }
+        .audit-decision-dismiss { color: var(--dismiss); font-weight: 600; }
+        .audit-decision-escalate { color: var(--amber); font-weight: 600; }
 
         /* ====================================================================
            Error Banner
            ==================================================================== */
         .error-banner {
-            background-color: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--flag);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: var(--flag-dim);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
             color: var(--flag);
             font-size: 13px;
-            display: none;
         }
 
         .error-banner.show {
-            display: block;
+            display: flex;
+            animation: slide-in 300ms var(--ease-out);
         }
 
         /* ====================================================================
-           Toast Notification
+           Toast
            ==================================================================== */
         .toast {
             position: fixed;
-            bottom: 20px;
+            bottom: 28px;
             left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--dismiss);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+            transform: translateX(-50%) translateY(0);
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            color: var(--fg);
+            padding: 11px 24px;
+            border-radius: 10px;
             font-size: 13px;
+            font-weight: 500;
             z-index: 1000;
-            animation: slideUp 0.3s ease, slideDown 0.3s ease 2.7s;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: toast-up 0.3s var(--ease-spring), toast-down 0.3s var(--ease-out) 2.7s;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
+        @keyframes toast-up {
+            from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-
-        @keyframes slideDown {
-            from {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
+        @keyframes toast-down {
+            to { opacity: 0; transform: translateX(-50%) translateY(16px); }
         }
 
         /* ====================================================================
-           Utility Classes
-           ==================================================================== */
-        .hidden {
-            display: none;
-        }
-
-        .text-muted {
-            color: var(--fg-muted);
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .gap-12 {
-            gap: 12px;
-        }
-
-        .mt-24 {
-            margin-top: 24px;
-        }
-
-        .mb-24 {
-            margin-bottom: 24px;
-        }
-
-        /* ====================================================================
-           Modal: Finding Detail
+           Modal
            ==================================================================== */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -719,34 +1016,48 @@
 
         .modal-panel {
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
             max-width: 780px;
             width: 100%;
-            max-height: 85vh;
+            max-height: 85dvh;
             overflow-y: auto;
             padding: 28px;
             position: relative;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+            animation: modal-in 350ms var(--ease-spring);
+        }
+
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .modal-close {
             position: absolute;
             top: 16px;
             right: 16px;
-            background: none;
-            border: none;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             color: var(--fg-muted);
-            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            min-width: unset;
+            font-size: 16px;
             cursor: pointer;
-            line-height: 1;
-            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 200ms var(--ease-out);
         }
 
         .modal-close:hover {
             color: var(--fg);
+            background: rgba(255, 255, 255, 0.06);
         }
 
-        .modal-close:focus {
+        .modal-close:focus-visible {
             outline: 2px solid var(--accent);
             outline-offset: 2px;
         }
@@ -757,12 +1068,14 @@
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            padding-right: 40px;
         }
 
         .modal-title {
             font-size: 18px;
             font-weight: 700;
             color: var(--fg);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .modal-comparison {
@@ -773,18 +1086,16 @@
         }
 
         @media (max-width: 640px) {
-            .modal-comparison {
-                grid-template-columns: 1fr;
-            }
+            .modal-comparison { grid-template-columns: 1fr; }
         }
 
         .modal-doc-title {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: 700;
             color: var(--fg-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
         }
 
         .modal-section {
@@ -794,18 +1105,18 @@
         }
 
         .modal-section-label {
-            font-size: 11px;
-            font-weight: 600;
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
             color: var(--fg-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
             margin-bottom: 8px;
-            display: block;
         }
 
         .modal-explanation-text {
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.65;
             color: var(--fg);
         }
 
@@ -815,72 +1126,109 @@
             gap: 10px;
         }
 
-        /* Make audit log rows clickable */
-        #audit-log-body tr {
-            cursor: pointer;
+        /* ====================================================================
+           Utility
+           ==================================================================== */
+        .hidden { display: none; }
+
+        /* ====================================================================
+           Scroll reveal (IntersectionObserver)
+           ==================================================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
         }
 
-        #audit-log-body tr:hover {
-            background: rgba(77, 127, 255, 0.08);
+        .reveal.in-view {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* ====================================================================
-           Responsive Design
+           Responsive
            ==================================================================== */
         @media (max-width: 768px) {
-            .app-header {
-                padding: 12px 16px;
-            }
-
-            .app-content {
-                padding: 16px;
-            }
-
-            .app-name {
-                font-size: 18px;
-            }
-
-            .panel-container {
-                max-width: 100%;
-            }
-
-            .summary-cards {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            }
+            .app-header { padding: 0 16px; }
+            .app-content { padding: 20px 16px 40px; }
+            .screen-title { font-size: 18px; }
+            .panel-container { max-width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
+
+        <!-- ================================================================
+             Header
+             ================================================================ -->
         <header class="app-header">
-            <div class="app-name">TenderSentry</div>
-            <div class="session-id" id="session-display" style="display: none;">
-                Session: <span id="session-id-text"></span>
+            <div class="brand">
+                <!-- Shield / scan icon -->
+                <div class="brand-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" stroke="rgba(59,130,246,0.5)" stroke-width="1.5" fill="rgba(59,130,246,0.08)"/>
+                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" stroke="rgba(59,130,246,0.3)" stroke-width="1" fill="none"/>
+                        <path d="M10 14l3 3 5-5" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="app-name">Tender<span>Sentry</span></div>
+            </div>
+            <div class="header-right">
+                <div class="session-pill" id="session-display">
+                    <div class="session-dot"></div>
+                    <span id="session-id-text"></span>
+                </div>
             </div>
         </header>
 
+        <!-- ================================================================
+             Content
+             ================================================================ -->
         <div class="app-content">
             <div class="panel-container">
-                <!-- Error Banner (shown above all screens) -->
-                <div id="error-banner" class="error-banner" role="alert"></div>
 
-                <!-- Screen 1: Upload -->
+                <!-- Error Banner -->
+                <div id="error-banner" class="error-banner" role="alert">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <span id="error-banner-text"></span>
+                </div>
+
+                <!-- ============================================================
+                     Screen 1: Upload
+                     ============================================================ -->
                 <div id="upload-screen" class="screen active">
-                    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--fg);">
-                        Upload Tender Documents
-                    </h2>
+                    <div class="screen-eyebrow">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+                            <circle cx="5" cy="5" r="5"/>
+                        </svg>
+                        Forensic Analysis
+                    </div>
+                    <h2 class="screen-title">Upload Tender Documents</h2>
 
-                    <div id="upload-zone" class="upload-area">
-                        <span class="upload-icon">📄</span>
-                        <label class="upload-label">Drop PDFs here or click to select</label>
-                        <p class="upload-hint">2-5 PDF files, max 10 MB each</p>
-                        <input
-                            type="file"
-                            id="file-input"
-                            multiple
-                            accept=".pdf"
-                            aria-label="Select PDF files for analysis"
-                        >
+                    <div class="bezel-outer">
+                        <div class="bezel-inner">
+                            <div id="upload-zone" class="upload-area" tabindex="0" role="button" aria-label="Drop PDFs here or click to select files">
+                                <div class="upload-icon-wrap" aria-hidden="true">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M14 18V10M14 10l-3 3M14 10l3 3" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M9 22h10a3 3 0 003-3v-8l-5-5H9a3 3 0 00-3 3v10a3 3 0 003 3z" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"/>
+                                    </svg>
+                                </div>
+                                <label class="upload-label">Drop PDFs here or click to select</label>
+                                <p class="upload-hint">2–5 PDF files · max 10 MB each</p>
+                                <input
+                                    type="file"
+                                    id="file-input"
+                                    multiple
+                                    accept=".pdf"
+                                    aria-label="Select PDF files for analysis"
+                                >
+                            </div>
+                        </div>
                     </div>
 
                     <div id="file-list" class="file-list"></div>
@@ -892,178 +1240,241 @@
                             disabled
                             aria-label="Start tender analysis"
                         >
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/>
+                                <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                                <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                            </svg>
                             Analyse Tender
                         </button>
                     </div>
                 </div>
 
-                <!-- Screen 2: Analysing -->
+                <!-- ============================================================
+                     Screen 2: Analysing
+                     ============================================================ -->
                 <div id="analysing-screen" class="screen">
                     <div class="spinner-container">
-                        <div class="spinner" aria-hidden="true"></div>
+                        <div class="spinner-rings" aria-hidden="true">
+                            <div class="ring ring-outer"></div>
+                            <div class="ring ring-mid"></div>
+                            <div class="ring ring-inner"></div>
+                        </div>
                         <p class="spinner-label" id="spinner-message">Extracting documents…</p>
+                        <div class="spinner-phase-dots" aria-hidden="true">
+                            <div class="phase-dot active" id="phase-0"></div>
+                            <div class="phase-dot" id="phase-1"></div>
+                            <div class="phase-dot" id="phase-2"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Screen 3: HITL Review -->
+                <!-- ============================================================
+                     Screen 3: HITL Review
+                     ============================================================ -->
                 <div id="hitl-screen" class="screen">
-                    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--fg);">
-                        Review Finding
-                    </h2>
+                    <div class="screen-eyebrow">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+                            <circle cx="5" cy="5" r="5"/>
+                        </svg>
+                        Human Review Required
+                    </div>
+                    <h2 class="screen-title">Review Finding</h2>
 
-                    <div class="finding-panel">
-                        <div class="finding-header">
-                            <div class="finding-counter">
-                                Finding <span id="finding-index">0</span> of <span id="finding-total">0</span>
-                            </div>
-                            <div class="finding-badges">
-                                <span id="finding-type-badge" class="badge"></span>
-                                <span id="finding-severity-badge" class="badge"></span>
-                            </div>
-                        </div>
-                        <div id="tender-ref-bar" style="display:none;font-size:12px;color:var(--fg-muted);margin-bottom:8px;padding:4px 8px;background:var(--bg-card);border-radius:4px;border:1px solid var(--border);">
-                            Tender: <span id="tender-ref-label" style="font-weight:600;color:var(--fg);font-family:monospace;"></span>
-                        </div>
+                    <div class="bezel-outer">
+                        <div class="bezel-inner finding-panel">
 
-                        <div class="finding-excerpt-row">
-                            <div class="finding-column">
-                                <div class="finding-doc-title" id="doc-a-title"></div>
-                                <pre class="excerpt" id="excerpt-a" aria-label="Excerpt from first document"></pre>
+                            <!-- Header row -->
+                            <div class="finding-header">
+                                <div class="finding-counter">
+                                    Finding <strong id="finding-index">0</strong> of <strong id="finding-total">0</strong>
+                                </div>
+                                <div class="finding-badges">
+                                    <span id="finding-type-badge" class="badge"></span>
+                                    <span id="finding-severity-badge" class="badge"></span>
+                                </div>
                             </div>
-                            <div class="finding-column">
-                                <div class="finding-doc-title" id="doc-b-title"></div>
-                                <pre class="excerpt" id="excerpt-b" aria-label="Excerpt from second document"></pre>
-                            </div>
-                        </div>
 
-                        <div class="finding-section">
-                            <div class="finding-section-title">
-                                💬 Explanation
+                            <!-- Tender ref -->
+                            <div id="tender-ref-bar" class="tender-ref-bar">
+                                Tender ref: <strong id="tender-ref-label"></strong>
                             </div>
-                            <div class="finding-section-content" id="explanation"></div>
-                        </div>
 
-                        <div class="finding-section">
-                            <div class="finding-section-title">
-                                ❓ Suggested Question
+                            <!-- Two-column excerpts -->
+                            <div class="finding-excerpt-row">
+                                <div class="finding-column">
+                                    <div class="finding-doc-title" id="doc-a-title"></div>
+                                    <pre class="excerpt" id="excerpt-a" aria-label="Excerpt from first document"></pre>
+                                </div>
+                                <div class="finding-column">
+                                    <div class="finding-doc-title" id="doc-b-title"></div>
+                                    <pre class="excerpt" id="excerpt-b" aria-label="Excerpt from second document"></pre>
+                                </div>
                             </div>
-                            <div class="finding-section-content" id="suggested-question"></div>
-                        </div>
 
-                        <div class="finding-section">
-                            <div class="finding-section-title" style="display:flex;align-items:center;gap:6px;">
-                                JEV Validation
-                                <span title="JEV (Judgment Engine Validation) by TypeSafe AI. Genuine score = confidence the contradiction is real (0–100%). Severity score = impact if genuine. Threshold ≥65% = validated." style="cursor:help;color:var(--fg-muted);font-size:13px;font-weight:400;border:1px solid var(--border);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;">?</span>
+                            <!-- Explanation -->
+                            <div class="finding-section">
+                                <div class="finding-section-title">
+                                    <svg class="section-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M7 6v5M7 4.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                    </svg>
+                                    Explanation
+                                </div>
+                                <div class="finding-section-content" id="explanation"></div>
                             </div>
-                            <div id="jev-container"></div>
-                        </div>
 
-                        <div class="finding-section">
-                            <div class="finding-section-title">
-                                Note (optional)
+                            <!-- Suggested question -->
+                            <div class="finding-section">
+                                <div class="finding-section-title">
+                                    <svg class="section-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M5.5 5.5a1.5 1.5 0 013 0c0 1-1.5 1.5-1.5 2.5M7 10v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                    </svg>
+                                    Suggested Question
+                                </div>
+                                <div class="finding-section-content" id="suggested-question"></div>
                             </div>
-                            <textarea
-                                id="finding-note"
-                                class="finding-note"
-                                placeholder="Enter your review notes here..."
-                                aria-label="Optional reviewer note"
-                            ></textarea>
-                        </div>
 
-                        <div class="finding-buttons">
-                            <button
-                                class="btn-flag"
-                                id="btn-flag"
-                                aria-label="Flag this finding as genuine"
-                            >
-                                🚩 FLAG
-                            </button>
-                            <button
-                                class="btn-dismiss"
-                                id="btn-dismiss"
-                                aria-label="Dismiss this finding"
-                            >
-                                ✅ DISMISS
-                            </button>
-                            <button
-                                class="btn-escalate"
-                                id="btn-escalate"
-                                aria-label="Escalate this finding for further review"
-                            >
-                                ⬆️ ESCALATE
-                            </button>
+                            <!-- JEV Validation -->
+                            <div class="finding-section">
+                                <div class="finding-section-title">
+                                    <svg class="section-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <path d="M7 2L2 4.5v4C2 11 4.3 13.2 7 14c2.7-.8 5-3 5-5.5v-4L7 2z" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M5 7l1.5 1.5 2.5-2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    JEV Validation
+                                    <button class="jev-info" title="JEV (Judgment Engine Validation) by TypeSafe AI. Genuine score = confidence the contradiction is real (0–100%). Severity score = impact if genuine. Threshold ≥65% = validated." aria-label="JEV info">?</button>
+                                </div>
+                                <div id="jev-container"></div>
+                            </div>
+
+                            <!-- Note -->
+                            <div class="finding-section">
+                                <div class="finding-section-title">
+                                    <svg class="section-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <path d="M2 2h10v8l-2 2H2V2z" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M4.5 5.5h5M4.5 7.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                    </svg>
+                                    Note <span style="color:var(--fg-faint);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">(optional)</span>
+                                </div>
+                                <textarea
+                                    id="finding-note"
+                                    class="finding-note"
+                                    placeholder="Enter your review notes here…"
+                                    aria-label="Optional reviewer note"
+                                ></textarea>
+
+                                <div class="finding-buttons">
+                                    <button class="btn-flag" id="btn-flag" aria-label="Flag this finding as genuine">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                            <path d="M3 2v10M3 2h7l-2 3.5 2 3.5H3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Flag
+                                    </button>
+                                    <button class="btn-dismiss" id="btn-dismiss" aria-label="Dismiss this finding">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+                                            <path d="M4.5 7l2 2 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Dismiss
+                                    </button>
+                                    <button class="btn-escalate" id="btn-escalate" aria-label="Escalate this finding for further review">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                            <path d="M7 11V3M7 3L4 6M7 3l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Escalate
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
 
-                <!-- Screen 4: Summary -->
+                <!-- ============================================================
+                     Screen 4: Summary
+                     ============================================================ -->
                 <div id="summary-screen" class="screen">
-                    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--fg);">
+                    <div class="screen-eyebrow">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+                            <path d="M5 0L6.18 3.64H10L7 5.9l1.18 3.64L5 7.27 1.82 9.54 3 5.9.01 3.64h3.82z"/>
+                        </svg>
                         Analysis Complete
-                    </h2>
+                    </div>
+                    <h2 class="screen-title">Session Summary</h2>
 
-                    <div class="summary-cards">
-                        <div class="summary-card">
-                            <div class="summary-card-label">Contradictions Found</div>
-                            <div class="summary-card-value" id="stat-found">0</div>
+                    <!-- Stat bento -->
+                    <div class="summary-bento">
+                        <div class="stat-card" data-type="found">
+                            <div class="stat-label">Found</div>
+                            <div class="stat-value" id="stat-found">0</div>
                         </div>
-                        <div class="summary-card">
-                            <div class="summary-card-label">Passed Validation</div>
-                            <div class="summary-card-value" id="stat-validated">0</div>
+                        <div class="stat-card" data-type="validated">
+                            <div class="stat-label">Validated</div>
+                            <div class="stat-value" id="stat-validated">0</div>
                         </div>
-                        <div class="summary-card">
-                            <div class="summary-card-label">Flagged</div>
-                            <div class="summary-card-value" id="stat-flagged">0</div>
+                        <div class="stat-card" data-type="flagged">
+                            <div class="stat-label">Flagged</div>
+                            <div class="stat-value" id="stat-flagged">0</div>
                         </div>
-                        <div class="summary-card">
-                            <div class="summary-card-label">Dismissed</div>
-                            <div class="summary-card-value" id="stat-dismissed">0</div>
+                        <div class="stat-card" data-type="dismissed">
+                            <div class="stat-label">Dismissed</div>
+                            <div class="stat-value" id="stat-dismissed">0</div>
                         </div>
-                        <div class="summary-card">
-                            <div class="summary-card-label">Escalated</div>
-                            <div class="summary-card-value" id="stat-escalated">0</div>
+                        <div class="stat-card" data-type="escalated">
+                            <div class="stat-label">Escalated</div>
+                            <div class="stat-value" id="stat-escalated">0</div>
                         </div>
                     </div>
 
-                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--fg);">
-                        Audit Log
-                    </h3>
-
-                    <div class="audit-table-container">
-                        <table class="audit-table">
-                            <thead>
-                                <tr>
-                                    <th>Finding ID</th>
-                                    <th>Tender</th>
-                                    <th>Type</th>
-                                    <th>Severity</th>
-                                    <th>JEV Score</th>
-                                    <th>Decision</th>
-                                    <th>Note</th>
-                                    <th>Timestamp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="audit-log-body">
-                                <tr><td colspan="8" style="text-align: center; color: var(--fg-muted);">No entries yet</td></tr>
-                            </tbody>
-                        </table>
+                    <!-- Audit log -->
+                    <div class="audit-section-title">Audit Log</div>
+                    <div class="bezel-outer">
+                        <div class="bezel-inner">
+                            <div class="audit-table-container" style="border:none;border-radius:0;">
+                                <table class="audit-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Finding ID</th>
+                                            <th>Tender</th>
+                                            <th>Type</th>
+                                            <th>Severity</th>
+                                            <th>JEV</th>
+                                            <th>Decision</th>
+                                            <th>Note</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="audit-log-body">
+                                        <tr><td colspan="8" style="text-align:center;color:var(--fg-muted);padding:24px;">No entries yet</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="button-group">
-                        <button
-                            id="new-analysis-button"
-                            class="btn-primary"
-                            aria-label="Start a new tender analysis"
-                        >
+                        <button id="new-analysis-button" class="btn-primary" aria-label="Start a new tender analysis">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M2 7a5 5 0 0110 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                                <path d="M12 5l0 2-2 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
                             New Analysis
                         </button>
                     </div>
                 </div>
 
-                <!-- Modal: Finding Detail -->
+                <!-- ============================================================
+                     Modal: Finding Detail
+                     ============================================================ -->
                 <div id="finding-modal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-finding-id">
                     <div class="modal-panel">
-                        <button class="modal-close" id="modal-close-btn" aria-label="Close finding detail">✕</button>
+                        <button class="modal-close" id="modal-close-btn" aria-label="Close finding detail">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
 
                         <div class="modal-header">
                             <span id="modal-finding-id" class="modal-title">F-001</span>
@@ -1083,25 +1494,26 @@
                         </div>
 
                         <div class="modal-section">
-                            <div class="modal-section-label">Why this is a finding</div>
+                            <span class="modal-section-label">Why this is a finding</span>
                             <div id="modal-explanation" class="modal-explanation-text"></div>
                         </div>
 
                         <div class="modal-section">
-                            <div class="modal-section-label">jev Validation</div>
+                            <span class="modal-section-label">JEV Validation</span>
                             <div id="modal-jev"></div>
                         </div>
 
                         <div class="modal-section modal-decision-row">
-                            <span class="modal-section-label" style="margin-bottom: 0;">Decision:</span>
+                            <span class="modal-section-label" style="margin-bottom:0;">Decision:</span>
                             <span id="modal-decision-badge" class="badge"></span>
-                            <span id="modal-note" style="color: var(--fg-muted); font-size: 13px;"></span>
+                            <span id="modal-note" style="color:var(--fg-muted);font-size:13px;"></span>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+
+            </div><!-- /panel-container -->
+        </div><!-- /app-content -->
+    </div><!-- /app-container -->
 
     <script>
         // ====================================================================
@@ -1128,6 +1540,14 @@
             const screen = document.getElementById(screenName + '-screen');
             if (screen) {
                 screen.classList.add('active');
+                // Trigger reveal animations for summary stats on summary screen
+                if (screenName === 'summary') {
+                    requestAnimationFrame(() => {
+                        document.querySelectorAll('.stat-card').forEach((el, i) => {
+                            setTimeout(() => el.classList.add('revealed'), i * 80);
+                        });
+                    });
+                }
             }
             state.currentScreen = screenName;
         }
@@ -1137,7 +1557,8 @@
         // ====================================================================
         function showError(message) {
             const banner = document.getElementById('error-banner');
-            banner.textContent = message;
+            const text = document.getElementById('error-banner-text');
+            text.textContent = message;
             banner.classList.add('show');
             setTimeout(() => {
                 banner.classList.remove('show');
@@ -1149,20 +1570,19 @@
         // ====================================================================
         function showToast(message, duration = 2000) {
             const toast = document.createElement('div');
-            toast.innerHTML = `<div class="toast" role="status">${message}</div>`;
-            document.body.appendChild(toast.firstChild);
-            const toastEl = toast.firstChild;
-            setTimeout(() => {
-                toastEl.remove();
-            }, duration + 300);
+            toast.className = 'toast';
+            toast.setAttribute('role', 'status');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), duration + 300);
         }
 
         // ====================================================================
         // File Upload: Validation & Display
         // ====================================================================
-        const uploadZone = document.getElementById('upload-zone');
-        const fileInput = document.getElementById('file-input');
-        const fileList = document.getElementById('file-list');
+        const uploadZone  = document.getElementById('upload-zone');
+        const fileInput   = document.getElementById('file-input');
+        const fileList    = document.getElementById('file-list');
         const analyseButton = document.getElementById('analyse-button');
 
         function formatFileSize(bytes) {
@@ -1176,12 +1596,8 @@
         function validateFile(file) {
             const errors = [];
             const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-            if (ext !== '.pdf') {
-                errors.push('Only PDF files are accepted.');
-            }
-            if (file.size > 10 * 1024 * 1024) {
-                errors.push('File exceeds 10 MB limit.');
-            }
+            if (ext !== '.pdf') errors.push('Only PDF files are accepted.');
+            if (file.size > 10 * 1024 * 1024) errors.push('File exceeds 10 MB limit.');
             return errors;
         }
 
@@ -1189,7 +1605,7 @@
             fileList.innerHTML = '';
             let validCount = 0;
 
-            state.files.forEach((file, idx) => {
+            state.files.forEach((file) => {
                 const errors = validateFile(file);
                 const isValid = errors.length === 0;
                 if (isValid) validCount++;
@@ -1202,7 +1618,12 @@
                         <span class="file-item-size">${formatFileSize(file.size)}</span>
                         ${errors.length > 0 ? '<div class="file-item-error">' + errors[0] + '</div>' : ''}
                     </div>
-                    <div class="file-item-icon"></div>
+                    <div class="file-item-status" aria-hidden="true">
+                        ${isValid
+                            ? '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" fill="rgba(16,185,129,0.15)" stroke="rgba(16,185,129,0.4)" stroke-width="1"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                            : '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" fill="rgba(239,68,68,0.12)" stroke="rgba(239,68,68,0.3)" stroke-width="1"/><path d="M6 6l6 6M12 6l-6 6" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/></svg>'
+                        }
+                    </div>
                 `;
                 fileList.appendChild(item);
             });
@@ -1211,6 +1632,9 @@
         }
 
         uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+        });
 
         fileInput.addEventListener('change', (e) => {
             state.files = Array.from(e.target.files);
@@ -1242,7 +1666,6 @@
 
             const formData = new FormData();
             state.files.forEach(file => {
-                // Only include valid PDFs
                 if (file.name.toLowerCase().endsWith('.pdf') && file.size <= 10 * 1024 * 1024) {
                     formData.append('files', file);
                 }
@@ -1263,13 +1686,16 @@
 
                 const data = await response.json();
                 state.sessionId = data.session_id;
-                document.getElementById('session-display').style.display = 'block';
+
+                const sessionDisplay = document.getElementById('session-display');
+                sessionDisplay.classList.add('visible');
                 document.getElementById('session-id-text').textContent = state.sessionId;
 
                 state.findingIndex = 0;
                 state.findingTotal = 0;
                 state.isPolling = true;
                 state.pollCount = 0;
+                messageIndex = 0;
 
                 showScreen('analysing');
                 startPolling();
@@ -1293,6 +1719,11 @@
         function updateSpinnerMessage() {
             const spinnerLabel = document.getElementById('spinner-message');
             spinnerLabel.textContent = messages[messageIndex];
+            // Update phase dots
+            for (let i = 0; i < 3; i++) {
+                const dot = document.getElementById('phase-' + i);
+                if (dot) dot.classList.toggle('active', i === messageIndex);
+            }
             messageIndex = (messageIndex + 1) % messages.length;
         }
 
@@ -1306,6 +1737,13 @@
 
         async function pollStatus() {
             if (!state.isPolling || !state.sessionId) return;
+
+            if (state.pollCount > 60) {
+                stopPolling();
+                showError('Analysis timed out. Please try again.');
+                showScreen('upload');
+                return;
+            }
 
             try {
                 const response = await fetch(`/api/status/${state.sessionId}`);
@@ -1362,25 +1800,21 @@
 
             // Type badge
             const typeMap = {
-                'deadline': 'badge-deadline',
+                'deadline':    'badge-deadline',
                 'requirement': 'badge-requirement',
-                'amount': 'badge-amount',
+                'amount':      'badge-amount',
             };
             const typeBadge = document.getElementById('finding-type-badge');
             typeBadge.textContent = finding.contradiction_type.toUpperCase();
             typeBadge.className = 'badge ' + (typeMap[finding.contradiction_type] || 'badge-deadline');
 
             // Severity badge
-            const severityMap = {
-                'HIGH': 'badge-high',
-                'MEDIUM': 'badge-medium',
-                'LOW': 'badge-low',
-            };
+            const severityMap = { 'HIGH': 'badge-high', 'MEDIUM': 'badge-medium', 'LOW': 'badge-low' };
             const severityBadge = document.getElementById('finding-severity-badge');
             severityBadge.textContent = '● ' + finding.severity;
             severityBadge.className = 'badge ' + (severityMap[finding.severity] || 'badge-medium');
 
-            // Tender ref badge
+            // Tender ref
             const refBar = document.getElementById('tender-ref-bar');
             if (finding.tender_ref) {
                 document.getElementById('tender-ref-label').textContent = finding.tender_ref;
@@ -1389,11 +1823,9 @@
                 refBar.style.display = 'none';
             }
 
-            // Document names
+            // Doc names & excerpts
             document.getElementById('doc-a-title').textContent = finding.doc_a;
             document.getElementById('doc-b-title').textContent = finding.doc_b;
-
-            // Excerpts
             document.getElementById('excerpt-a').textContent = finding.excerpt_a;
             document.getElementById('excerpt-b').textContent = finding.excerpt_b;
 
@@ -1408,26 +1840,25 @@
             if (!finding.jev_available) {
                 jevContainer.innerHTML = '<div class="jev-unavailable">Validation unavailable</div>';
             } else {
-                const genuinePercent = Math.round((finding.jev_genuine || 0) * 100);
+                const genuinePercent  = Math.round((finding.jev_genuine  || 0) * 100);
                 const severityPercent = Math.round((finding.jev_severity || 0) * 100);
-
                 jevContainer.innerHTML = `
                     <div class="jev-bar">
                         <div class="jev-bar-label">
-                            <span class="jev-bar-label-left">jev: Genuine</span>
-                            <span class="jev-bar-label-right">${genuinePercent}%</span>
+                            <span>JEV: Genuine</span>
+                            <span class="jev-bar-label-pct">${genuinePercent}%</span>
                         </div>
-                        <div class="jev-bar-progress">
-                            <div class="jev-bar-fill" style="width: ${genuinePercent}%;"></div>
+                        <div class="jev-bar-track">
+                            <div class="jev-bar-fill" style="width:${genuinePercent}%"></div>
                         </div>
                     </div>
-                    <div class="jev-bar" style="margin-top: 16px;">
+                    <div class="jev-bar">
                         <div class="jev-bar-label">
-                            <span class="jev-bar-label-left">Severity</span>
-                            <span class="jev-bar-label-right">${severityPercent}%</span>
+                            <span>Severity</span>
+                            <span class="jev-bar-label-pct">${severityPercent}%</span>
                         </div>
-                        <div class="jev-bar-progress">
-                            <div class="jev-bar-fill" style="width: ${severityPercent}%;"></div>
+                        <div class="jev-bar-track">
+                            <div class="jev-bar-fill" style="width:${severityPercent}%"></div>
                         </div>
                     </div>
                 `;
@@ -1440,17 +1871,9 @@
         // ====================================================================
         // Decision Buttons
         // ====================================================================
-        document.getElementById('btn-flag').addEventListener('click', () => {
-            submitDecision('flag');
-        });
-
-        document.getElementById('btn-dismiss').addEventListener('click', () => {
-            submitDecision('dismiss');
-        });
-
-        document.getElementById('btn-escalate').addEventListener('click', () => {
-            submitDecision('escalate');
-        });
+        document.getElementById('btn-flag').addEventListener('click',     () => submitDecision('flag'));
+        document.getElementById('btn-dismiss').addEventListener('click',  () => submitDecision('dismiss'));
+        document.getElementById('btn-escalate').addEventListener('click', () => submitDecision('escalate'));
 
         const _decisionBtns = ['btn-flag', 'btn-dismiss', 'btn-escalate'];
 
@@ -1469,10 +1892,10 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        session_id: state.sessionId,
-                        finding_id: state.currentFinding.finding_id,
-                        decision: decision,
-                        note: note,
+                        session_id:  state.sessionId,
+                        finding_id:  state.currentFinding.finding_id,
+                        decision:    decision,
+                        note:        note,
                     }),
                 });
 
@@ -1496,7 +1919,6 @@
         // Summary Screen
         // ====================================================================
         async function displaySummary(summary) {
-            // Fetch audit log first — it is the ground truth for all stats
             try {
                 const response = await fetch('/api/audit-log');
                 if (!response.ok) {
@@ -1505,21 +1927,18 @@
                 }
 
                 const allEntries = await response.json();
-
-                // Filter to current session only
                 const entries = allEntries.filter(e => e.session_id === state.sessionId);
 
-                // Compute stats from audit log rows
                 const flagCount     = entries.filter(e => e.human_decision === 'flag').length;
                 const dismissCount  = entries.filter(e => e.human_decision === 'dismiss').length;
                 const escalateCount = entries.filter(e => e.human_decision === 'escalate').length;
-                const passedCount   = entries.filter(e => e.jev_genuine >= 0.65).length;
+                const passedCount   = entries.filter(e => e.jev_genuine >= 0.5).length;
 
-                document.getElementById('stat-found').textContent      = entries.length;
-                document.getElementById('stat-validated').textContent  = passedCount;
-                document.getElementById('stat-flagged').textContent    = flagCount;
-                document.getElementById('stat-dismissed').textContent  = dismissCount;
-                document.getElementById('stat-escalated').textContent  = escalateCount;
+                document.getElementById('stat-found').textContent     = entries.length;
+                document.getElementById('stat-validated').textContent = passedCount;
+                document.getElementById('stat-flagged').textContent   = flagCount;
+                document.getElementById('stat-dismissed').textContent = dismissCount;
+                document.getElementById('stat-escalated').textContent = escalateCount;
 
                 displayAuditLog(entries);
             } catch (error) {
@@ -1532,31 +1951,29 @@
             tbody.innerHTML = '';
 
             if (entries.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--fg-muted);">No entries yet</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--fg-muted);padding:24px;">No entries yet</td></tr>';
                 return;
             }
 
             entries.forEach(entry => {
                 const row = document.createElement('tr');
                 const jevScore = entry.jev_genuine ? Math.round(entry.jev_genuine * 100) + '%' : '—';
-
                 const decisionClass = 'audit-decision-' + (entry.human_decision || '');
-                const decisionText = (entry.human_decision || 'unknown').toUpperCase();
+                const decisionText  = (entry.human_decision || 'unknown').toUpperCase();
 
-                // Show last segment of tender_ref (e.g. "00046" from "MOFPED/REAP/.../00046")
                 const tenderDisplay = entry.tender_ref
-                    ? ('<span title="' + entry.tender_ref + '" style="font-family:monospace;font-size:11px;">' + entry.tender_ref.split('/').pop() + '</span>')
+                    ? ('<span title="' + entry.tender_ref + '" class="audit-cell-mono">' + entry.tender_ref.split('/').pop() + '</span>')
                     : '—';
 
                 row.innerHTML = `
-                    <td>${entry.finding_id || '—'}</td>
+                    <td class="audit-cell-mono">${entry.finding_id || '—'}</td>
                     <td>${tenderDisplay}</td>
                     <td>${entry.contradiction_type || '—'}</td>
                     <td>${entry.severity || '—'}</td>
-                    <td>${jevScore}</td>
-                    <td class="audit-cell-decision ${decisionClass}">${decisionText}</td>
-                    <td style="font-size: 12px; color: var(--fg-muted);">${entry.human_note ? entry.human_note.substring(0, 20) + '…' : '—'}</td>
-                    <td style="font-size: 12px; color: var(--fg-muted);">${entry.decided_at ? new Date(entry.decided_at).toLocaleTimeString() : '—'}</td>
+                    <td class="audit-cell-mono">${jevScore}</td>
+                    <td class="${decisionClass}" style="font-size:10px;letter-spacing:0.06em;">${decisionText}</td>
+                    <td style="color:var(--fg-muted)">${entry.human_note ? entry.human_note.substring(0, 20) + '…' : '—'}</td>
+                    <td class="audit-cell-mono" style="color:var(--fg-muted)">${entry.decided_at ? new Date(entry.decided_at).toLocaleTimeString() : '—'}</td>
                 `;
                 row.addEventListener('click', () => openFindingModal(entry));
                 tbody.appendChild(row);
@@ -1567,59 +1984,57 @@
         // Modal: Finding Detail
         // ====================================================================
         function openFindingModal(entry) {
-            // Finding ID + badges
             document.getElementById('modal-finding-id').textContent = entry.finding_id || '—';
 
             const typeMap = { deadline: 'badge-deadline', requirement: 'badge-requirement', amount: 'badge-amount' };
             const tb = document.getElementById('modal-type-badge');
             tb.textContent = (entry.contradiction_type || '').toUpperCase();
-            tb.className = 'badge ' + (typeMap[entry.contradiction_type] || '');
+            tb.className   = 'badge ' + (typeMap[entry.contradiction_type] || '');
 
             const severityMap = { HIGH: 'badge-high', MEDIUM: 'badge-medium', LOW: 'badge-low' };
             const sb = document.getElementById('modal-severity-badge');
             sb.textContent = '● ' + (entry.severity || '');
-            sb.className = 'badge ' + (severityMap[entry.severity] || '');
+            sb.className   = 'badge ' + (severityMap[entry.severity] || '');
 
-            // Doc names + excerpts
             document.getElementById('modal-doc-a-name').textContent = entry.doc_a || 'Document A';
-            document.getElementById('modal-excerpt-a').textContent = entry.excerpt_a || '(no excerpt)';
+            document.getElementById('modal-excerpt-a').textContent  = entry.excerpt_a || '(no excerpt)';
             document.getElementById('modal-excerpt-a').setAttribute('aria-label', 'Excerpt from ' + (entry.doc_a || 'Document A'));
 
             document.getElementById('modal-doc-b-name').textContent = entry.doc_b || 'Document B';
-            document.getElementById('modal-excerpt-b').textContent = entry.excerpt_b || '(no excerpt)';
+            document.getElementById('modal-excerpt-b').textContent  = entry.excerpt_b || '(no excerpt)';
             document.getElementById('modal-excerpt-b').setAttribute('aria-label', 'Excerpt from ' + (entry.doc_b || 'Document B'));
 
-            // Explanation
             document.getElementById('modal-explanation').textContent = entry.explanation || '(no explanation)';
 
-            // jev Validation
+            // JEV
             const jevEl = document.getElementById('modal-jev');
             if (entry.jev_genuine != null && entry.jev_genuine > 0) {
-                const pct = Math.round(entry.jev_genuine * 100);
-                const color = pct >= 65 ? 'var(--dismiss)' : pct >= 40 ? 'var(--escalate)' : 'var(--flag)';
+                const pct   = Math.round(entry.jev_genuine * 100);
+                const color = pct >= 65 ? 'var(--dismiss)' : pct >= 40 ? 'var(--amber)' : 'var(--flag)';
                 jevEl.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--fg-muted);margin-bottom:4px">
-                        <span>Genuine probability</span><span>${pct}%</span>
-                    </div>
-                    <div style="height:6px;background:var(--border);border-radius:3px">
-                        <div style="height:6px;width:${pct}%;background:${color};border-radius:3px"></div>
+                    <div class="jev-bar">
+                        <div class="jev-bar-label">
+                            <span>Genuine probability</span>
+                            <span class="jev-bar-label-pct">${pct}%</span>
+                        </div>
+                        <div class="jev-bar-track">
+                            <div class="jev-bar-fill" style="width:${pct}%;background:${color}"></div>
+                        </div>
                     </div>`;
             } else {
-                jevEl.innerHTML = '<span style="color:var(--fg-muted);font-size:13px">Validation unavailable</span>';
+                jevEl.innerHTML = '<span class="jev-unavailable">Validation unavailable</span>';
             }
 
             // Decision badge
             const decMap = { flag: '--flag', dismiss: '--dismiss', escalate: '--escalate' };
             const db = document.getElementById('modal-decision-badge');
-            db.textContent = (entry.human_decision || '').toUpperCase();
-            db.style.background = `var(${decMap[entry.human_decision] || '--fg-muted'})`;
-            db.style.color = entry.human_decision === 'escalate' ? '#000' : '#fff';
-            db.className = 'badge';
+            db.textContent   = (entry.human_decision || '').toUpperCase();
+            db.style.background = `var(${decMap[entry.human_decision] || '--fg-faint'})`;
+            db.style.color      = entry.human_decision === 'escalate' ? '#1a0a00' : '#fff';
+            db.className     = 'badge';
 
-            // Note
             document.getElementById('modal-note').textContent = entry.human_note || '';
 
-            // Show modal
             document.getElementById('finding-modal').style.display = 'flex';
             document.getElementById('modal-close-btn').focus();
         }
@@ -1628,10 +2043,9 @@
             document.getElementById('finding-modal').style.display = 'none';
         }
 
-        // Wire up modal close handlers
         document.getElementById('modal-close-btn').addEventListener('click', closeFindingModal);
         document.getElementById('finding-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeFindingModal(); // Click backdrop to close
+            if (e.target === this) closeFindingModal();
         });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeFindingModal();
@@ -1643,22 +2057,39 @@
         document.getElementById('new-analysis-button').addEventListener('click', () => {
             stopPolling();
             state.currentScreen = 'upload';
-            state.sessionId = null;
-            state.files = [];
-            state.findingIndex = 0;
-            state.findingTotal = 0;
+            state.sessionId     = null;
+            state.files         = [];
+            state.findingIndex  = 0;
+            state.findingTotal  = 0;
             state.currentFinding = null;
-            state.pollCount = 0;
+            state.pollCount     = 0;
 
             fileInput.value = '';
             fileList.innerHTML = '';
             analyseButton.disabled = true;
 
-            document.getElementById('session-display').style.display = 'none';
+            document.getElementById('session-display').classList.remove('visible');
             document.getElementById('error-banner').classList.remove('show');
+
+            // Reset stat cards reveal state for next summary
+            document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('revealed'));
 
             showScreen('upload');
         });
+
+        // ====================================================================
+        // Scroll-Reveal via IntersectionObserver
+        // ====================================================================
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
     </script>
 </body>
 </html>

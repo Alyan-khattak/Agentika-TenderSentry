@@ -208,6 +208,10 @@ def compare_node(state: TenderState) -> dict:
                 d["tender_ref"] = ref
                 all_contradictions.append(RawContradiction(**d))
 
+        # Renumber finding_ids sequentially across all groups
+        for i, c in enumerate(all_contradictions, 1):
+            c.finding_id = f"F-{i:03d}"
+
         # Serialize RawContradiction objects to dicts
         contradictions_dicts = [c.model_dump() for c in all_contradictions]
 

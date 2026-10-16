@@ -158,6 +158,14 @@ class DateComparator:
                     if len(excerpt) > 200:
                         excerpt = excerpt[:197] + "..."
 
+                    # Only flag dates in a deadline context to reduce false positives
+                    surrounding = text[max(0, match.start() - 150):match.end() + 150]
+                    if not re.search(
+                        r'deadline|submission|closing|due\s+date|last\s+date|submit|received\s+by|no\s+later\s+than',
+                        surrounding, re.IGNORECASE
+                    ):
+                        continue
+
                     dates_found.append((date_obj, date_str, excerpt))
                 except (ParserError, ValueError, TypeError):
                     # Malformed date string; log and skip
@@ -209,13 +217,10 @@ class AmountComparator:
 
         logging.info(f"AmountComparator: extracted amounts from {len(amounts_by_filename)} unique documents")
 
-        # Find line-item sum vs stated total contradictions
-        # Split each document's amounts into line items and stated totals (using is_total flag)
-        for filename_a in amounts_by_filename:
-            for filename_b in amounts_by_filename:
-                if filename_a == filename_b:
-                    continue
-
+        # Find line-item sum vs stated total contradictions using sorted pairs (prevents A,B + B,A duplicates)
+        filenames = sorted(amounts_by_filename.keys())
+        for i, filename_a in enumerate(filenames):
+            for filename_b in filenames[i + 1:]:
                 amounts_a = amounts_by_filename[filename_a]
                 amounts_b = amounts_by_filename[filename_b]
 
@@ -225,31 +230,50 @@ class AmountComparator:
                 totals_b = [(amt, exc) for amt, exc, is_total in amounts_b if is_total]
                 line_items_b = [(amt, exc) for amt, exc, is_total in amounts_b if not is_total]
 
-                # Pattern: doc_a has line items, doc_b has a stated total
+                # A has line items, B has stated total
                 if line_items_a and totals_b:
                     sum_a = sum(amt for amt, _ in line_items_a)
                     total_b = totals_b[0][0]
-
-                    # Calculate percentage difference
                     if total_b > 0:
                         pct_diff = abs(sum_a - total_b) / total_b
                         if pct_diff > self.config.amount_tolerance_pct:
                             excerpt_a = "; ".join([exc for _, exc in line_items_a[:3]])[:200]
                             excerpt_b = totals_b[0][1]
-
-                            contradiction = RawContradiction(
+                            contradictions.append(RawContradiction(
                                 contradiction_type=TYPE_AMOUNT,
                                 doc_a=filename_a,
                                 excerpt_a=f"Line items sum to ${sum_a:,.2f} ({excerpt_a})",
                                 doc_b=filename_b,
                                 excerpt_b=f"Total stated as ${total_b:,.2f} ({excerpt_b})",
                                 severity=SEVERITY_HIGH,
-                                finding_id="F-placeholder",  # ContradictionDetector renumbers
-                            )
-                            contradictions.append(contradiction)
+                                finding_id="F-placeholder",
+                            ))
                             logging.warning(
                                 f"AmountComparator: {filename_a} items sum to ${sum_a:,.2f} "
                                 f"vs {filename_b} total ${total_b:,.2f} — diff {pct_diff * 100:.1f}%"
+                            )
+
+                # B has line items, A has stated total
+                if line_items_b and totals_a:
+                    sum_b = sum(amt for amt, _ in line_items_b)
+                    total_a = totals_a[0][0]
+                    if total_a > 0:
+                        pct_diff = abs(sum_b - total_a) / total_a
+                        if pct_diff > self.config.amount_tolerance_pct:
+                            excerpt_b_str = "; ".join([exc for _, exc in line_items_b[:3]])[:200]
+                            excerpt_a_str = totals_a[0][1]
+                            contradictions.append(RawContradiction(
+                                contradiction_type=TYPE_AMOUNT,
+                                doc_a=filename_b,
+                                excerpt_a=f"Line items sum to ${sum_b:,.2f} ({excerpt_b_str})",
+                                doc_b=filename_a,
+                                excerpt_b=f"Total stated as ${total_a:,.2f} ({excerpt_a_str})",
+                                severity=SEVERITY_HIGH,
+                                finding_id="F-placeholder",
+                            ))
+                            logging.warning(
+                                f"AmountComparator: {filename_b} items sum to ${sum_b:,.2f} "
+                                f"vs {filename_a} total ${total_a:,.2f} — diff {pct_diff * 100:.1f}%"
                             )
 
         logging.info(f"AmountComparator: found {len(contradictions)} amount contradictions")

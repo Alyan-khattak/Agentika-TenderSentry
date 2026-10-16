@@ -35,6 +35,7 @@ Implementation notes:
 import os
 import shutil
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -82,19 +83,8 @@ except ImportError:
 # FastAPI Application Setup
 # ============================================================================
 
-app = FastAPI(
-    title="TenderSentry",
-    description="AI contradiction detector for public tender PDFs",
-    version="0.1.0",
-)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Initialize database and create artifacts directory on startup.
-    Called once when FastAPI server starts.
-    """
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     try:
         logging.info("TenderSentry startup: initializing database and artifact directories")
         init_db()
@@ -103,6 +93,15 @@ async def startup_event():
     except Exception as e:
         logging.error(f"Startup failed: {str(e)}")
         raise TenderSentryException(f"Startup failed: {str(e)}", __import__("sys"))
+    yield
+
+
+app = FastAPI(
+    title="TenderSentry",
+    description="AI contradiction detector for public tender PDFs",
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
 
 # ============================================================================
@@ -222,7 +221,7 @@ async def analyse(files: list[UploadFile] = File(...)):
         filenames = []
 
         for file in files:
-            file_path = os.path.join(session_dir, file.filename)
+            file_path = os.path.join(session_dir, os.path.basename(file.filename))
             filenames.append(file.filename)
 
             # Write uploaded file to disk
