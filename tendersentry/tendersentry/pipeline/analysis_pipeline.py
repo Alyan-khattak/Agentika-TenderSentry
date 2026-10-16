@@ -195,10 +195,9 @@ def get_status(session_id: str) -> dict:
     # (current_finding_idx >= len(contradictions) AND findings count matches)
     contradictions = state.get("contradictions", [])
     findings = state.get("findings", [])
-    idx = state.get("current_finding_idx", 0)
     audit_entries = state.get("audit_entries", [])
 
-    if contradictions and idx >= len(contradictions) and len(findings) == len(contradictions):
+    if contradictions and len(findings) == len(contradictions) and len(audit_entries) == len(contradictions):
         # All contradictions have been investigated and decisions logged
         logging.info(
             f"get_status: analysis complete for session {session_id}: "

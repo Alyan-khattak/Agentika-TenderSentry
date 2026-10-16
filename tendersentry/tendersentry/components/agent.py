@@ -26,6 +26,7 @@ Import pattern:
 
 from typing import TypedDict, Optional
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import sqlite3
 from datetime import datetime
 
@@ -256,36 +257,21 @@ def investigate_node(state: TenderState) -> dict:
         dict with "findings" key (list of dicts) on success,
         or "error" key (str) on failure.
     """
-    logging.info(f"investigate_node: starting for session {state['session_id']}")
+    session_id = state["session_id"]
+    contradictions = state.get("contradictions", [])
+    total = len(contradictions)
+    logging.info(f"investigate_node: starting for session {session_id} — {total} contradiction(s)")
 
-    try:
-        # Get the index of the contradiction to investigate
-        idx = state["current_finding_idx"]
-        total = len(state["contradictions"])
+    if not contradictions:
+        return {}
 
-        if idx >= total:
-            # No more contradictions to investigate
-            logging.info(f"investigate_node: all {total} contradiction(s) processed")
-            return {"findings": state["findings"]}
-
-        # Deserialize the current contradiction
-        contradiction_dict = state["contradictions"][idx]
-        contradiction = RawContradiction(**contradiction_dict)
-
-        logging.info(
-            f"investigate_node: processing contradiction {idx + 1}/{total} "
-            f"({contradiction.finding_id}: {contradiction.contradiction_type})"
-        )
-
-        # Build context string for LLM and jev
+    def _investigate_one(c_dict: dict) -> Finding:
+        contradiction = RawContradiction(**c_dict)
         context = (
             f"Document A ({contradiction.doc_a}):\n{contradiction.excerpt_a}\n\n"
             f"Document B ({contradiction.doc_b}):\n{contradiction.excerpt_b}\n\n"
             f"Contradiction Type: {contradiction.contradiction_type}"
         )
-
-        # ============ LLM Explanation ============
-        # Build LLM prompt
         llm_prompt = (
             f"You are a procurement compliance expert. Analyze this contradiction "
             f"found in tender documents.\n\n"
@@ -298,8 +284,6 @@ def investigate_node(state: TenderState) -> dict:
             f"3. A severity level (HIGH, MEDIUM, or LOW)\n\n"
             f"Be concise and precise."
         )
-
-        # Call instructor-wrapped Groq client for structured output
         try:
             client = get_instructor_client()
             explanation_obj = client.chat.completions.create(
@@ -309,9 +293,7 @@ def investigate_node(state: TenderState) -> dict:
                 max_retries=LLM_MAX_RETRIES,
             )
             logging.info(f"investigate_node: LLM explanation obtained for {contradiction.finding_id}")
-
         except Exception as e:
-            # LLM failed; use default values for explanation
             logging.error(
                 f"investigate_node: LLM call failed for {contradiction.finding_id}: {type(e).__name__}"
             )
@@ -320,14 +302,12 @@ def investigate_node(state: TenderState) -> dict:
                 suggested_question="Please review the contradiction manually.",
                 severity=contradiction.severity,
             )
-
-        # ============ jev Validation ============
-        # Call jev to validate the contradiction
         jev_result = call_jev(context, contradiction.contradiction_type)
-
-        # ============ Build Finding ============
-        # Combine contradiction, explanation, and jev into a Finding
-        finding = Finding(
+        logging.info(
+            f"investigate_node: completed {contradiction.finding_id} "
+            f"(jev_genuine={jev_result.jev_genuine:.2f})"
+        )
+        return Finding(
             finding_id=contradiction.finding_id,
             contradiction_type=contradiction.contradiction_type,
             doc_a=contradiction.doc_a,
@@ -336,7 +316,7 @@ def investigate_node(state: TenderState) -> dict:
             excerpt_b=contradiction.excerpt_b,
             explanation=explanation_obj.explanation,
             suggested_question=explanation_obj.suggested_question,
-            severity=explanation_obj.severity,  # Use LLM-adjusted severity
+            severity=explanation_obj.severity,
             jev_genuine=jev_result.jev_genuine,
             jev_severity=jev_result.jev_severity,
             jev_category=jev_result.jev_category,
@@ -344,17 +324,28 @@ def investigate_node(state: TenderState) -> dict:
             tender_ref=contradiction.tender_ref,
         )
 
-        # Serialize Finding to dict and append to findings
-        findings_dicts = state["findings"] + [finding.model_dump()]
+    try:
+        # Run all LLM+jev calls in parallel — results arrive back in order
+        results: list[Finding | None] = [None] * total
+        max_workers = min(total, 3)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_idx = {
+                executor.submit(_investigate_one, c_dict): i
+                for i, c_dict in enumerate(contradictions)
+            }
+            for future in as_completed(future_to_idx):
+                i = future_to_idx[future]
+                try:
+                    results[i] = future.result()
+                except Exception as e:
+                    logging.error(f"investigate_node: worker {i} failed: {type(e).__name__}: {e}")
+                    results[i] = None
 
-        logging.info(
-            f"investigate_node: completed {contradiction.finding_id} "
-            f"(jev_genuine={jev_result.jev_genuine:.2f})"
-        )
-
+        findings_dicts = [r.model_dump() for r in results if r is not None]
+        logging.info(f"investigate_node: all {len(findings_dicts)}/{total} findings ready for session {session_id}")
         return {
             "findings": findings_dicts,
-            "current_finding_idx": idx + 1,
+            "current_finding_idx": total,
         }
 
     except Exception as e:
@@ -387,20 +378,20 @@ def route_after_compare(state: TenderState) -> str:
 
 def route_after_hitl(state: TenderState) -> str:
     """
-    Route after hitl_review node: if more contradictions to investigate, loop; else END.
+    Route after hitl_review node: if more findings to review, loop back to hitl_review; else END.
 
     Args:
-        state: TenderState dict with current_finding_idx and contradictions.
+        state: TenderState dict with audit_entries and findings.
 
     Returns:
-        "investigate" if more contradictions to process, END otherwise.
+        "hitl_review" if more findings to review, END otherwise.
     """
-    idx = state.get("current_finding_idx", 0)
-    total = len(state.get("contradictions", []))
+    reviewed = len(state.get("audit_entries", []))
+    total = len(state.get("findings", []))
 
-    if idx < total:
-        logging.info(f"route_after_hitl: {idx}/{total} processed, looping to investigate")
-        return "investigate"
+    if reviewed < total:
+        logging.info(f"route_after_hitl: {reviewed}/{total} processed, looping to hitl_review")
+        return "hitl_review"
     else:
         logging.info(f"route_after_hitl: all {total} contradiction(s) processed, ending graph")
         return END
@@ -442,13 +433,11 @@ def hitl_review_node(state: TenderState) -> dict:
             logging.warning("hitl_review_node: no findings in state, skipping")
             return {}
 
-        # The most recent finding is at current_finding_idx - 1
-        # (investigate_node increments current_finding_idx after building the finding)
-        finding_idx = state["current_finding_idx"] - 1
-        if finding_idx < 0 or finding_idx >= len(findings):
+        # Next finding to review = number of decisions already made
+        finding_idx = len(state.get("audit_entries", []))
+        if finding_idx >= len(findings):
             logging.warning(
-                f"hitl_review_node: invalid finding_idx {finding_idx}, "
-                f"findings count {len(findings)}"
+                f"hitl_review_node: finding_idx {finding_idx} >= findings count {len(findings)}, skipping"
             )
             return {}
 
@@ -558,12 +547,12 @@ def build_graph(db_path: str = None):
     # Edge: investigate → hitl_review
     workflow.add_edge("investigate", "hitl_review")
 
-    # Conditional edge: hitl_review → (investigate or END)
-    # This loop allows processing multiple contradictions
+    # Conditional edge: hitl_review → (hitl_review loop or END)
+    # All findings are already investigated; loop shows each one to the human in turn
     workflow.add_conditional_edges(
         "hitl_review",
         route_after_hitl,
-        {"investigate": "investigate", END: END}
+        {"hitl_review": "hitl_review", END: END}
     )
 
     # Set up checkpointer with SqliteSaver
