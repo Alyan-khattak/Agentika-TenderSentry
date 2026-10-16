@@ -2,14 +2,12 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY tendersentry/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY tendersentry/ .
 
-# Railway injects PORT; default 8000 for local docker run
 ENV PORT=8000
-
 EXPOSE $PORT
 
 CMD uvicorn main:app --host 0.0.0.0 --port $PORT

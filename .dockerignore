@@ -1,7 +1,7 @@
 .env
 *.db
-artifacts/
-logs/
+tendersentry/artifacts/
+tendersentry/logs/
 __pycache__/
 **/__pycache__/
 *.pyc
