@@ -1455,6 +1455,13 @@
                     </div>
 
                     <div class="button-group">
+                        <button id="download-csv-button" class="btn-secondary" aria-label="Download audit log as CSV">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                            </svg>
+                            Download CSV
+                        </button>
                         <button id="new-analysis-button" class="btn-primary" aria-label="Start a new tender analysis">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                                 <path d="M2 7a5 5 0 0110 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -1931,6 +1938,7 @@
 
                 const allEntries = await response.json();
                 const entries = allEntries.filter(e => e.session_id === state.sessionId);
+                state._auditEntries = entries;
 
                 const flagCount     = entries.filter(e => e.human_decision === 'flag').length;
                 const dismissCount  = entries.filter(e => e.human_decision === 'dismiss').length;
@@ -2057,6 +2065,41 @@
         // ====================================================================
         // Reset: New Analysis
         // ====================================================================
+        document.getElementById('download-csv-button').addEventListener('click', () => {
+            const tbody = document.getElementById('audit-log-body');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            if (!rows.length || rows[0].querySelector('td[colspan]')) {
+                showToast('No entries to export.');
+                return;
+            }
+
+            const headers = [
+                'session_id','finding_id','contradiction_type','severity',
+                'doc_a','doc_b','explanation','jev_genuine','jev_severity',
+                'jev_category','human_decision','human_note','decided_at','tender_ref'
+            ];
+
+            const escape = v => {
+                const s = (v == null ? '' : String(v)).replace(/"/g, '""');
+                return /[",\n\r]/.test(s) ? `"${s}"` : s;
+            };
+
+            // Use the last fetched audit entries from state (set during displaySummary)
+            const entries = state._auditEntries || [];
+            const csvRows = [headers.join(',')].concat(
+                entries.map(e => headers.map(h => escape(e[h])).join(','))
+            );
+
+            const blob = new Blob([csvRows.join('\r\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tendersentry_${state.sessionId || 'audit'}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV downloaded');
+        });
+
         document.getElementById('new-analysis-button').addEventListener('click', () => {
             stopPolling();
             state.currentScreen = 'upload';
