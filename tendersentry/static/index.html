@@ -1783,6 +1783,8 @@
 
         function startPolling() {
             if (_pollInterval) clearInterval(_pollInterval);
+            state.isPolling = true;
+            state.pollCount = 0;
             updateSpinnerMessage();
             _pollInterval = setInterval(pollStatus, 2000);
         }
