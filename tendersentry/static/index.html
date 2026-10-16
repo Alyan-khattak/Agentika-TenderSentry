@@ -1765,6 +1765,7 @@
                     state.findingTotal = data.finding_count || state.findingTotal + 1;
                     state.findingIndex = (state.findingIndex || 0) + 1;
                     state.currentFinding = data.finding;
+                    setDecisionButtons(false);
                     displayFinding();
                     showScreen('hitl');
                 } else if (status === 'complete') {
