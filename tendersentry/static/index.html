@@ -1288,11 +1288,20 @@
             'Validating findings…',
         ];
         let messageIndex = 0;
+        let _pollInterval = null;
 
         function updateSpinnerMessage() {
             const spinnerLabel = document.getElementById('spinner-message');
             spinnerLabel.textContent = messages[messageIndex];
             messageIndex = (messageIndex + 1) % messages.length;
+        }
+
+        function stopPolling() {
+            state.isPolling = false;
+            if (_pollInterval) {
+                clearInterval(_pollInterval);
+                _pollInterval = null;
+            }
         }
 
         async function pollStatus() {
@@ -1313,24 +1322,21 @@
                     if (state.pollCount % 3 === 0) {
                         updateSpinnerMessage();
                     }
-                    // Continue polling
                 } else if (status === 'hitl_pending') {
-                    state.isPolling = false;
+                    stopPolling();
                     state.findingTotal = data.finding_count || state.findingTotal + 1;
                     state.findingIndex = (state.findingIndex || 0) + 1;
                     state.currentFinding = data.finding;
                     displayFinding();
                     showScreen('hitl');
                 } else if (status === 'complete') {
-                    state.isPolling = false;
+                    stopPolling();
                     displaySummary(data.summary);
                     showScreen('summary');
                 } else if (status === 'error') {
-                    state.isPolling = false;
+                    stopPolling();
                     showError(data.message || 'Analysis failed.');
                     showScreen('upload');
-                } else {
-                    // Unknown status, keep polling
                 }
             } catch (error) {
                 showError('Request timed out. Check connection.');
@@ -1338,14 +1344,9 @@
         }
 
         function startPolling() {
+            if (_pollInterval) clearInterval(_pollInterval);
             updateSpinnerMessage();
-            const interval = setInterval(() => {
-                if (!state.isPolling) {
-                    clearInterval(interval);
-                    return;
-                }
-                pollStatus();
-            }, 2000);
+            _pollInterval = setInterval(pollStatus, 2000);
         }
 
         // ====================================================================
@@ -1451,10 +1452,17 @@
             submitDecision('escalate');
         });
 
+        const _decisionBtns = ['btn-flag', 'btn-dismiss', 'btn-escalate'];
+
+        function setDecisionButtons(disabled) {
+            _decisionBtns.forEach(id => document.getElementById(id).disabled = disabled);
+        }
+
         async function submitDecision(decision) {
             if (!state.currentFinding) return;
 
             const note = document.getElementById('finding-note').value;
+            setDecisionButtons(true);
 
             try {
                 const response = await fetch('/api/decision', {
@@ -1471,17 +1479,16 @@
                 if (!response.ok) {
                     const error = await response.json();
                     showError(error.detail || 'Decision submission failed.');
+                    setDecisionButtons(false);
                     return;
                 }
 
                 showToast('Decision recorded');
-
-                // Resume polling
-                state.isPolling = true;
                 showScreen('analysing');
                 startPolling();
             } catch (error) {
                 showError('Request timed out. Check connection.');
+                setDecisionButtons(false);
             }
         }
 
@@ -1634,13 +1641,13 @@
         // Reset: New Analysis
         // ====================================================================
         document.getElementById('new-analysis-button').addEventListener('click', () => {
+            stopPolling();
             state.currentScreen = 'upload';
             state.sessionId = null;
             state.files = [];
             state.findingIndex = 0;
             state.findingTotal = 0;
             state.currentFinding = null;
-            state.isPolling = false;
             state.pollCount = 0;
 
             fileInput.value = '';

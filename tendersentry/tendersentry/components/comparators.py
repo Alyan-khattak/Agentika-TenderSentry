@@ -423,6 +423,17 @@ class ContradictionDetector:
         results.extend(self.amount_cmp.compare(chunks))
         results.extend(self.req_cmp.compare(chunks))
 
+        # Deduplicate: keep first contradiction per (type, doc_a, doc_b)
+        # Multiple keyword pairs can fire for the same document pair
+        seen: set = set()
+        unique = []
+        for r in results:
+            key = (r.contradiction_type, r.doc_a, r.doc_b)
+            if key not in seen:
+                seen.add(key)
+                unique.append(r)
+        results = unique
+
         # Renumber finding_ids sequentially
         for i, r in enumerate(results, 1):
             r.finding_id = f"F-{i:03d}"

@@ -259,11 +259,10 @@ async def analyse(files: list[UploadFile] = File(...)):
         return AnalyseResponse(session_id=session_id)
 
     except HTTPException:
-        # Re-raise HTTPException as-is (validation error)
         raise
     except Exception as e:
         logging.error(f"POST /api/analyse: unhandled error: {str(e)}")
-        raise TenderSentryException(f"File upload failed: {str(e)}", __import__("sys"))
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
 
 # ============================================================================
@@ -312,10 +311,12 @@ async def status(session_id: str):
         # Call pipeline to get current status
         current_status = get_status(session_id=session_id)
 
-        # If analysis is complete, mark session as completed in database
+        # Mark session complete once — skip if already stamped
         if current_status.get("status") == STATUS_COMPLETE:
-            logging.info(f"GET /api/status/{session_id}: marking session complete")
-            complete_session(session_id=session_id)
+            session = get_session(session_id=session_id)
+            if session and not session.get("completed_at"):
+                logging.info(f"GET /api/status/{session_id}: marking session complete")
+                complete_session(session_id=session_id)
 
         logging.info(f"GET /api/status/{session_id}: status={current_status.get('status')}")
         return current_status
@@ -324,7 +325,7 @@ async def status(session_id: str):
         raise
     except Exception as e:
         logging.error(f"GET /api/status/{session_id}: unhandled error: {str(e)}")
-        raise TenderSentryException(f"Status check failed: {str(e)}", __import__("sys"))
+        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
 
 
 # ============================================================================
@@ -443,7 +444,7 @@ async def decision(req: DecisionRequest):
         raise
     except Exception as e:
         logging.error(f"POST /api/decision: unhandled error: {str(e)}")
-        raise TenderSentryException(f"Decision submission failed: {str(e)}", __import__("sys"))
+        raise HTTPException(status_code=500, detail=f"Decision submission failed: {str(e)}")
 
 
 # ============================================================================
@@ -481,7 +482,7 @@ async def audit_log():
 
     except Exception as e:
         logging.error(f"GET /api/audit-log: unhandled error: {str(e)}")
-        raise TenderSentryException(f"Audit log fetch failed: {str(e)}", __import__("sys"))
+        raise HTTPException(status_code=500, detail=f"Audit log fetch failed: {str(e)}")
 
 
 # ============================================================================

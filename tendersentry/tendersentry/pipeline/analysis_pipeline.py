@@ -160,8 +160,8 @@ def get_status(session_id: str) -> dict:
         )
         return {"status": STATUS_RUNNING}
 
-    # No state yet; session may not have started or is still initializing
-    if state_snapshot is None or state_snapshot.values is None:
+    # No state yet; session not started or still initializing
+    if not state_snapshot or not state_snapshot.values:
         return {"status": STATUS_RUNNING}
 
     state = state_snapshot.values
