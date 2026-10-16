@@ -68,6 +68,10 @@ DATE_TOLERANCE_DAYS = 0
 AMOUNT_TOLERANCE_PCT = 0.01  # 1% tolerance
 AMOUNT_MIN_LINE_ITEMS = 3   # A document needs at least this many non-total amounts to be treated as a BOQ
 
+# Semantic comparator limits
+SEMANTIC_MAX_CHARS_PER_DOC = 4000   # Truncate each doc's text before sending to LLM
+SEMANTIC_MAX_FINDINGS = 3           # Max contradictions LLM may return per document pair
+
 # Requirement matching: keyword pairs that conflict
 # DateComparator matches these; if doc A has form 1 and doc B has form 2 → flag
 REQUIREMENT_KEYWORD_PAIRS = [
@@ -85,6 +89,7 @@ TYPE_DEADLINE = "deadline"      # DateComparator: conflicting submission/closing
 TYPE_REQUIREMENT = "requirement"  # RequirementComparator: conflicting ISO/mandatory/optional
 TYPE_AMOUNT = "amount"          # AmountComparator: stated total ≠ sum of line items
 TYPE_MISSING = "missing"        # Data not found in one or more documents
+TYPE_SEMANTIC = "semantic"      # SemanticComparator: LLM-detected factual/scope contradictions
 
 
 # ============================================================================

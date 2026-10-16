@@ -625,6 +625,38 @@
             color: var(--accent);
         }
 
+        /* Deadline alert banner (Feature 21) */
+        .deadline-alert {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(245,158,11,0.35);
+            background: rgba(245,158,11,0.08);
+            font-size: 12px;
+            color: var(--amber, #f59e0b);
+        }
+        .deadline-alert svg { flex-shrink: 0; }
+
+        /* Version comparison toggle (Feature 22) */
+        .mode-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0 2px;
+        }
+        .mode-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--fg-muted);
+            user-select: none;
+        }
+        .mode-toggle-label input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
+        .mode-toggle-hint { font-size: 11px; color: var(--fg-muted); opacity: 0.6; }
+
         /* Two-column excerpt grid */
         .finding-excerpt-row {
             display: grid;
@@ -676,6 +708,32 @@
             word-break: break-word;
             line-height: 1.6;
         }
+
+        .excerpt mark {
+            background: rgba(245, 158, 11, 0.28);
+            color: #fcd34d;
+            border-radius: 3px;
+            padding: 0 2px;
+            font-style: normal;
+        }
+
+        /* Audit log — tender ref grouping */
+        .audit-group-header td { padding: 0 !important; background: rgba(59,130,246,0.06); border-top: 1px solid var(--border); }
+        .audit-group-header-inner { display: flex; align-items: center; gap: 10px; padding: 8px 14px; flex-wrap: wrap; }
+        .audit-group-ref { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; flex-shrink: 0; }
+        .audit-group-chips { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+        .audit-chip { font-size: 10px; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.03em; }
+        .chip-total    { background: rgba(148,163,184,0.12); color: var(--fg-muted); }
+        .chip-flag     { background: rgba(239,68,68,0.12);   color: var(--flag,#ef4444); }
+        .chip-dismiss  { background: rgba(16,185,129,0.12);  color: var(--dismiss,#10b981); }
+        .chip-escalate { background: rgba(245,158,11,0.12);  color: var(--amber,#f59e0b); }
+        .chip-jev      { background: rgba(139,92,246,0.12);  color: #a78bfa; }
+        .audit-group-toggle { margin-left: auto; font-size: 10px; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--fg-muted); cursor: pointer; white-space: nowrap; }
+        .audit-group-toggle:hover { background: rgba(255,255,255,0.05); color: var(--fg); }
+        .audit-summary-panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 14px 14px 10px; }
+        .audit-summary-stat { display: flex; flex-direction: column; gap: 2px; }
+        .audit-summary-stat span { font-size: 10px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .audit-summary-stat strong { font-size: 18px; font-weight: 700; color: var(--fg); }
 
         .finding-section {
             padding: 16px 20px;
@@ -1233,6 +1291,14 @@
 
                     <div id="file-list" class="file-list"></div>
 
+                    <div class="mode-toggle-row">
+                        <label class="mode-toggle-label">
+                            <input type="checkbox" id="version-mode-toggle" aria-label="Enable version comparison mode">
+                            <span>Version Comparison Mode</span>
+                            <span class="mode-toggle-hint">— compare two versions of the same document</span>
+                        </label>
+                    </div>
+
                     <div class="button-group">
                         <button
                             id="analyse-button"
@@ -1298,6 +1364,15 @@
                             <!-- Tender ref -->
                             <div id="tender-ref-bar" class="tender-ref-bar">
                                 Tender ref: <strong id="tender-ref-label"></strong>
+                            </div>
+
+                            <!-- Deadline proximity alert (Feature 21) -->
+                            <div id="deadline-alert" class="deadline-alert" role="alert">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <path d="M7 1L13 12H1L7 1z" stroke="#f59e0b" stroke-width="1.3" stroke-linejoin="round"/>
+                                    <path d="M7 5.5v3M7 10h.01" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round"/>
+                                </svg>
+                                <span id="deadline-alert-msg"></span>
                             </div>
 
                             <!-- Two-column excerpts -->
@@ -1455,6 +1530,13 @@
                     </div>
 
                     <div class="button-group">
+                        <button id="email-draft-button" class="btn-secondary" aria-label="Open email draft with flagged findings">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+                                <path d="M1 4l6 4.5L13 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                            </svg>
+                            Email Draft
+                        </button>
                         <button id="download-csv-button" class="btn-secondary" aria-label="Download audit log as CSV">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                                 <path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1535,7 +1617,54 @@
             currentFinding: null,
             isPolling: false,
             pollCount: 0,
+            versionMode: false,
         };
+
+        // ====================================================================
+        // Feature 6: Excerpt highlight helper
+        // ====================================================================
+        const _highlightPatterns = {
+            deadline:    /\b(\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}|\d{1,2}[-/]\d{1,2}[-/]\d{4}|\d{4}-\d{2}-\d{2})\b/gi,
+            amount:      /\$[\d,]+(?:\.\d{2})?/g,
+            requirement: /\b(mandatory|optional|or equivalent|ISO 9001:2015|ISO 9001|shall|must|should|may(?= )|certified|registered|prior experience|non-refundable|refundable|fixed price|provisional sum)\b/gi,
+            semantic:    null,
+        };
+
+        function highlightExcerpt(text, type) {
+            const safe = (text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            const pattern = _highlightPatterns[type];
+            if (!pattern) return safe;
+            pattern.lastIndex = 0;
+            return safe.replace(pattern, '<mark>$&</mark>');
+        }
+
+        // ====================================================================
+        // Feature 21: Deadline proximity helper
+        // ====================================================================
+        function checkDeadlineAlert(finding) {
+            const alert = document.getElementById('deadline-alert');
+            if (finding.contradiction_type !== 'deadline') { alert.style.display = 'none'; return; }
+            const months = {january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+            const re = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\b/gi;
+            const text = (finding.excerpt_a || '') + ' ' + (finding.excerpt_b || '');
+            let earliest = null, m;
+            while ((m = re.exec(text)) !== null) {
+                const d = new Date(+m[3], months[m[2].toLowerCase()], +m[1]);
+                if (!isNaN(d) && (!earliest || d < earliest)) earliest = d;
+            }
+            if (!earliest) { alert.style.display = 'none'; return; }
+            const hoursLeft = (earliest - Date.now()) / 36e5;
+            if (hoursLeft > 0 && hoursLeft <= 48) {
+                document.getElementById('deadline-alert-msg').textContent =
+                    `Deadline in ${Math.ceil(hoursLeft)}h — resolve this conflict before submitting.`;
+                alert.style.display = 'flex';
+            } else {
+                alert.style.display = 'none';
+            }
+        }
 
         // ====================================================================
         // Utility: Show/Hide Screens
@@ -1677,6 +1806,8 @@
                     formData.append('files', file);
                 }
             });
+            state.versionMode = document.getElementById('version-mode-toggle').checked;
+            formData.append('mode', state.versionMode ? 'version_comparison' : 'standard');
 
             try {
                 const response = await fetch('/api/analyse', {
@@ -1773,6 +1904,9 @@
                     state.findingIndex = (state.findingIndex || 0) + 1;
                     state.currentFinding = data.finding;
                     setDecisionButtons(false);
+                    checkDeadlineAlert(data.finding);
+                    document.querySelector('#hitl-screen .screen-title').textContent =
+                        state.versionMode ? 'Review Change' : 'Review Finding';
                     displayFinding();
                     showScreen('hitl');
                 } else if (status === 'complete') {
@@ -1834,10 +1968,12 @@
             }
 
             // Doc names & excerpts
-            document.getElementById('doc-a-title').textContent = finding.doc_a;
-            document.getElementById('doc-b-title').textContent = finding.doc_b;
-            document.getElementById('excerpt-a').textContent = finding.excerpt_a;
-            document.getElementById('excerpt-b').textContent = finding.excerpt_b;
+            document.getElementById('doc-a-title').textContent =
+                state.versionMode ? 'Version 1 — ' + finding.doc_a : finding.doc_a;
+            document.getElementById('doc-b-title').textContent =
+                state.versionMode ? 'Version 2 — ' + finding.doc_b : finding.doc_b;
+            document.getElementById('excerpt-a').innerHTML = highlightExcerpt(finding.excerpt_a, finding.contradiction_type);
+            document.getElementById('excerpt-b').innerHTML = highlightExcerpt(finding.excerpt_b, finding.contradiction_type);
 
             // Explanation & question
             document.getElementById('explanation').textContent = finding.explanation;
@@ -1875,7 +2011,7 @@
             }
 
             // Clear note
-            document.getElementById('finding-note').value = '';
+            document.getElementById('finding-note').value = finding.suggested_question || '';
         }
 
         // ====================================================================
@@ -1966,28 +2102,84 @@
                 return;
             }
 
-            entries.forEach(entry => {
-                const row = document.createElement('tr');
-                const jevScore = entry.jev_genuine ? Math.round(entry.jev_genuine * 100) + '%' : '—';
-                const decisionClass = 'audit-decision-' + (entry.human_decision || '');
-                const decisionText  = (entry.human_decision || 'unknown').toUpperCase();
+            // Group by tender_ref
+            const groups = {};
+            entries.forEach(e => {
+                const key = e.tender_ref || '__none__';
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(e);
+            });
 
-                const tenderDisplay = entry.tender_ref
-                    ? ('<span title="' + entry.tender_ref + '" class="audit-cell-mono">' + entry.tender_ref.split('/').pop() + '</span>')
-                    : '—';
+            Object.entries(groups).forEach(([ref, groupEntries], gi) => {
+                const label      = ref === '__none__' ? '— No Tender Reference —' : ref;
+                const flagCount  = groupEntries.filter(e => e.human_decision === 'flag').length;
+                const dimCount   = groupEntries.filter(e => e.human_decision === 'dismiss').length;
+                const escCount   = groupEntries.filter(e => e.human_decision === 'escalate').length;
+                const avgJev     = Math.round(groupEntries.reduce((s, e) => s + (e.jev_genuine || 0), 0) / groupEntries.length * 100);
+                const types      = [...new Set(groupEntries.map(e => e.contradiction_type))].join(', ');
+                const gid        = 'grp-' + gi;
 
-                row.innerHTML = `
-                    <td class="audit-cell-mono">${entry.finding_id || '—'}</td>
-                    <td>${tenderDisplay}</td>
-                    <td>${entry.contradiction_type || '—'}</td>
-                    <td>${entry.severity || '—'}</td>
-                    <td class="audit-cell-mono">${jevScore}</td>
-                    <td class="${decisionClass}" style="font-size:10px;letter-spacing:0.06em;">${decisionText}</td>
-                    <td style="color:var(--fg-muted)">${entry.human_note ? entry.human_note.substring(0, 20) + '…' : '—'}</td>
-                    <td class="audit-cell-mono" style="color:var(--fg-muted)">${entry.decided_at ? new Date(entry.decided_at).toLocaleTimeString() : '—'}</td>
-                `;
-                row.addEventListener('click', () => openFindingModal(entry));
-                tbody.appendChild(row);
+                // ── Group header row ──────────────────────────────────────
+                const hdr = document.createElement('tr');
+                hdr.className = 'audit-group-header';
+                hdr.innerHTML = `<td colspan="8">
+                    <div class="audit-group-header-inner">
+                        <span class="audit-group-ref">${label}</span>
+                        <div class="audit-group-chips">
+                            <span class="audit-chip chip-total">${groupEntries.length} finding${groupEntries.length !== 1 ? 's' : ''}</span>
+                            ${flagCount  ? `<span class="audit-chip chip-flag">${flagCount} flagged</span>` : ''}
+                            ${dimCount   ? `<span class="audit-chip chip-dismiss">${dimCount} dismissed</span>` : ''}
+                            ${escCount   ? `<span class="audit-chip chip-escalate">${escCount} escalated</span>` : ''}
+                            <span class="audit-chip chip-jev">avg JEV ${avgJev}%</span>
+                        </div>
+                        <button class="audit-group-toggle" data-gid="${gid}">▼ Summary</button>
+                    </div>
+                </td>`;
+                tbody.appendChild(hdr);
+
+                // ── Summary panel row (hidden by default) ─────────────────
+                const sumRow = document.createElement('tr');
+                sumRow.id = gid + '-sum';
+                sumRow.style.display = 'none';
+                sumRow.innerHTML = `<td colspan="8">
+                    <div class="audit-summary-panel">
+                        <div class="audit-summary-stat"><span>Total</span><strong>${groupEntries.length}</strong></div>
+                        <div class="audit-summary-stat"><span>Flagged</span><strong style="color:var(--flag,#ef4444)">${flagCount}</strong></div>
+                        <div class="audit-summary-stat"><span>Dismissed</span><strong style="color:var(--dismiss,#10b981)">${dimCount}</strong></div>
+                        <div class="audit-summary-stat"><span>Escalated</span><strong style="color:var(--amber,#f59e0b)">${escCount}</strong></div>
+                        <div class="audit-summary-stat"><span>Avg JEV</span><strong>${avgJev}%</strong></div>
+                        <div class="audit-summary-stat"><span>Types</span><strong style="font-size:12px">${types}</strong></div>
+                    </div>
+                </td>`;
+                tbody.appendChild(sumRow);
+
+                // Toggle handler
+                hdr.querySelector('.audit-group-toggle').addEventListener('click', function() {
+                    const s = document.getElementById(gid + '-sum');
+                    const open = s.style.display !== 'none';
+                    s.style.display = open ? 'none' : '';
+                    this.textContent = open ? '▼ Summary' : '▲ Hide';
+                });
+
+                // ── Entry rows ────────────────────────────────────────────
+                groupEntries.forEach(entry => {
+                    const row = document.createElement('tr');
+                    const jevScore      = entry.jev_genuine ? Math.round(entry.jev_genuine * 100) + '%' : '—';
+                    const decisionClass = 'audit-decision-' + (entry.human_decision || '');
+                    const decisionText  = (entry.human_decision || 'unknown').toUpperCase();
+                    row.innerHTML = `
+                        <td class="audit-cell-mono">${entry.finding_id || '—'}</td>
+                        <td>—</td>
+                        <td>${entry.contradiction_type || '—'}</td>
+                        <td>${entry.severity || '—'}</td>
+                        <td class="audit-cell-mono">${jevScore}</td>
+                        <td class="${decisionClass}" style="font-size:10px;letter-spacing:0.06em;">${decisionText}</td>
+                        <td style="color:var(--fg-muted)">${entry.human_note ? entry.human_note.substring(0, 20) + '…' : '—'}</td>
+                        <td class="audit-cell-mono" style="color:var(--fg-muted)">${entry.decided_at ? new Date(entry.decided_at).toLocaleTimeString() : '—'}</td>
+                    `;
+                    row.addEventListener('click', () => openFindingModal(entry));
+                    tbody.appendChild(row);
+                });
             });
         }
 
@@ -2065,6 +2257,51 @@
         // ====================================================================
         // Reset: New Analysis
         // ====================================================================
+        document.getElementById('email-draft-button').addEventListener('click', () => {
+            const entries = state._auditEntries || [];
+            const flagged = entries.filter(e => e.human_decision === 'flag' || e.human_decision === 'escalate');
+
+            if (!flagged.length) {
+                showToast('No flagged or escalated findings to draft.');
+                return;
+            }
+
+            const tenderRef = flagged.find(e => e.tender_ref)?.tender_ref || state.sessionId || 'Unknown';
+            const subject   = `TenderSentry Alert — ${tenderRef}`;
+
+            const bodyLines = [
+                `TenderSentry detected ${flagged.length} finding(s) requiring attention in tender: ${tenderRef}`,
+                `Session ID: ${state.sessionId || '—'}`,
+                `Date: ${new Date().toLocaleDateString()}`,
+                '',
+                '─────────────────────────────────────',
+            ];
+
+            flagged.forEach((e, i) => {
+                bodyLines.push('');
+                bodyLines.push(`Finding ${i + 1}: ${e.finding_id} [${(e.contradiction_type || '').toUpperCase()}] — ${e.severity}`);
+                bodyLines.push(`Document A: ${e.doc_a}`);
+                bodyLines.push(`  "${(e.excerpt_a || '').substring(0, 120)}"`);
+                bodyLines.push(`Document B: ${e.doc_b}`);
+                bodyLines.push(`  "${(e.excerpt_b || '').substring(0, 120)}"`);
+                bodyLines.push(`Suggested question: ${e.explanation ? e.explanation.substring(0, 200) : '—'}`);
+                bodyLines.push(`Action required: ${e.human_note || e.suggested_question || '—'}`);
+                bodyLines.push(`Decision: ${(e.human_decision || '').toUpperCase()}`);
+            });
+
+            bodyLines.push('');
+            bodyLines.push('─────────────────────────────────────');
+            bodyLines.push('Generated by TenderSentry AI Contradiction Detector');
+
+            const mailto = 'mailto:?subject=' + encodeURIComponent(subject)
+                         + '&body=' + encodeURIComponent(bodyLines.join('\n'));
+
+            const a = document.createElement('a');
+            a.href = mailto;
+            a.click();
+            showToast('Email draft opened');
+        });
+
         document.getElementById('download-csv-button').addEventListener('click', () => {
             const tbody = document.getElementById('audit-log-body');
             const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -2109,6 +2346,9 @@
             state.findingTotal  = 0;
             state.currentFinding = null;
             state.pollCount     = 0;
+            state.versionMode   = false;
+            document.getElementById('version-mode-toggle').checked = false;
+            document.getElementById('deadline-alert').style.display = 'none';
 
             fileInput.value = '';
             fileList.innerHTML = '';

@@ -66,7 +66,7 @@ def get_graph():
 # start_analysis — Launch Background Graph Run
 # ============================================================================
 
-def start_analysis(session_id: str, pdf_paths: list[str]) -> None:
+def start_analysis(session_id: str, pdf_paths: list[str], mode: str = "standard") -> None:
     """
     Start a graph run in a background thread.
 
@@ -96,6 +96,7 @@ def start_analysis(session_id: str, pdf_paths: list[str]) -> None:
         "human_decision": None,
         "audit_entries": [],
         "error": None,
+        "mode": mode,
     }
 
     # Thread config: SqliteSaver uses thread_id to isolate sessions

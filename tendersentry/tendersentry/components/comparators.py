@@ -26,16 +26,24 @@ Never:
 
 import re
 from datetime import datetime
+from typing import Optional
 from dateutil.parser import parse as parse_date, ParserError
+from pydantic import BaseModel, Field
 from tendersentry.entity.config_entity import ComparatorConfig
 from tendersentry.entity.artifact_entity import DocumentChunk, RawContradiction
 from tendersentry.constants import (
     TYPE_DEADLINE,
     TYPE_AMOUNT,
     TYPE_REQUIREMENT,
+    TYPE_SEMANTIC,
     SEVERITY_HIGH,
     SEVERITY_MEDIUM,
+    SEVERITY_LOW,
     AMOUNT_MIN_LINE_ITEMS,
+    SEMANTIC_MAX_CHARS_PER_DOC,
+    SEMANTIC_MAX_FINDINGS,
+    LLM_MODEL_PRIMARY,
+    LLM_MAX_RETRIES,
 )
 from tendersentry.logging.logger import logging
 
@@ -428,6 +436,111 @@ class RequirementComparator:
         return keyword  # Fallback: just return the keyword if we can't find a sentence
 
 
+class _SemanticFinding(BaseModel):
+    """LLM-extracted semantic contradiction between two document excerpts."""
+    excerpt_a: str = Field(..., description="Verbatim quote from Document A showing the contradiction")
+    excerpt_b: str = Field(..., description="Verbatim quote from Document B showing the contradiction")
+    severity: str = Field(..., description="HIGH, MEDIUM, or LOW")
+    description: str = Field(..., description="One-sentence summary of the contradiction")
+
+
+class _SemanticFindings(BaseModel):
+    """Wrapper so instructor returns a list."""
+    findings: list[_SemanticFinding] = Field(default_factory=list)
+
+
+class SemanticComparator:
+    """LLM-powered comparator that detects factual, scope, and statement contradictions.
+
+    Passes truncated text from each document pair to an LLM via instructor and asks
+    it to find contradictions that deterministic comparators cannot catch: conflicting
+    eligibility criteria, scope changes, factual inconsistencies, legal clause conflicts.
+
+    Returns at most SEMANTIC_MAX_FINDINGS contradictions per document pair.
+    Fails gracefully — returns [] on LLM error so existing comparators are unaffected.
+    """
+
+    def __init__(self, config: ComparatorConfig):
+        self.config = config
+        logging.info("SemanticComparator initialized")
+
+    def compare(self, chunks: list[DocumentChunk]) -> list[RawContradiction]:
+        """Find semantic contradictions across unique document pairs.
+
+        Args:
+            chunks: List of DocumentChunk objects from all PDFs.
+
+        Returns:
+            List of RawContradiction objects with contradiction_type=TYPE_SEMANTIC.
+        """
+        # Late import to avoid circular dependency at module load time
+        from tendersentry.utils.utils import get_instructor_client
+
+        # Build per-document full text (first SEMANTIC_MAX_CHARS_PER_DOC chars)
+        docs: dict[str, str] = {}
+        for chunk in chunks:
+            if chunk.filename not in docs:
+                docs[chunk.filename] = ""
+            if len(docs[chunk.filename]) < SEMANTIC_MAX_CHARS_PER_DOC:
+                docs[chunk.filename] += chunk.text + "\n"
+
+        filenames = sorted(docs.keys())
+        if len(filenames) < 2:
+            return []
+
+        contradictions: list[RawContradiction] = []
+
+        for i, fn_a in enumerate(filenames):
+            for fn_b in filenames[i + 1:]:
+                text_a = docs[fn_a][:SEMANTIC_MAX_CHARS_PER_DOC]
+                text_b = docs[fn_b][:SEMANTIC_MAX_CHARS_PER_DOC]
+
+                prompt = (
+                    f"You are a procurement audit expert. Compare these two tender documents "
+                    f"and find factual contradictions, inconsistencies, or conflicting statements "
+                    f"that a bidder would need to resolve.\n\n"
+                    f"Ignore minor formatting differences. Focus on: conflicting eligibility "
+                    f"criteria, scope of work changes, conflicting legal/technical requirements, "
+                    f"inconsistent quantities or specifications, conflicting payment terms.\n\n"
+                    f"Document A ({fn_a}):\n{text_a}\n\n"
+                    f"Document B ({fn_b}):\n{text_b}\n\n"
+                    f"Return at most {SEMANTIC_MAX_FINDINGS} contradictions. "
+                    f"Only include genuine conflicts, not stylistic differences. "
+                    f"Each excerpt must be a verbatim quote from the respective document."
+                )
+
+                try:
+                    client = get_instructor_client()
+                    result: _SemanticFindings = client.chat.completions.create(
+                        model=LLM_MODEL_PRIMARY,
+                        response_model=_SemanticFindings,
+                        messages=[{"role": "user", "content": prompt}],
+                        max_retries=LLM_MAX_RETRIES,
+                    )
+                    severity_map = {"HIGH": SEVERITY_HIGH, "MEDIUM": SEVERITY_MEDIUM, "LOW": SEVERITY_LOW}
+                    for f in result.findings[:SEMANTIC_MAX_FINDINGS]:
+                        contradictions.append(RawContradiction(
+                            contradiction_type=TYPE_SEMANTIC,
+                            doc_a=fn_a,
+                            excerpt_a=f.excerpt_a[:300],
+                            doc_b=fn_b,
+                            excerpt_b=f.excerpt_b[:300],
+                            severity=severity_map.get(f.severity.upper(), SEVERITY_MEDIUM),
+                            finding_id="F-placeholder",
+                        ))
+                    logging.info(
+                        f"SemanticComparator: {fn_a} vs {fn_b} → {len(result.findings)} finding(s)"
+                    )
+                except Exception as e:
+                    logging.error(
+                        f"SemanticComparator: LLM call failed for {fn_a} vs {fn_b}: "
+                        f"{type(e).__name__}: {e}"
+                    )
+
+        logging.info(f"SemanticComparator: found {len(contradictions)} semantic contradictions")
+        return contradictions
+
+
 class ContradictionDetector:
     """Orchestrator that runs all three comparators and combines results.
 
@@ -444,6 +557,7 @@ class ContradictionDetector:
         self.date_cmp = DateComparator(config)
         self.amount_cmp = AmountComparator(config)
         self.req_cmp = RequirementComparator(config)
+        self.semantic_cmp = SemanticComparator(config)
         logging.info("ContradictionDetector initialized")
 
     def detect(self, chunks: list[DocumentChunk]) -> list[RawContradiction]:
@@ -457,18 +571,20 @@ class ContradictionDetector:
         """
         logging.info(f"ContradictionDetector.detect: running all comparators on {len(chunks)} chunks")
 
-        # Collect results from all three comparators
+        # Collect results from all comparators (deterministic first, semantic last)
         results = []
         results.extend(self.date_cmp.compare(chunks))
         results.extend(self.amount_cmp.compare(chunks))
         results.extend(self.req_cmp.compare(chunks))
+        results.extend(self.semantic_cmp.compare(chunks))
 
         # Deduplicate: keep first contradiction per (type, doc_a, doc_b)
-        # Multiple keyword pairs can fire for the same document pair
+        # Semantic findings use excerpt_a as tiebreaker — same pair can have multiple distinct semantic issues
         seen: set = set()
         unique = []
         for r in results:
-            key = (r.contradiction_type, r.doc_a, r.doc_b)
+            key = (r.contradiction_type, r.doc_a, r.doc_b) if r.contradiction_type != TYPE_SEMANTIC \
+                else (r.contradiction_type, r.doc_a, r.doc_b, r.excerpt_a[:60])
             if key not in seen:
                 seen.add(key)
                 unique.append(r)

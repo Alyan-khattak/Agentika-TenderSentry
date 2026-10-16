@@ -38,7 +38,7 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -142,7 +142,7 @@ class DecisionResponse(BaseModel):
 # ============================================================================
 
 @app.post("/api/analyse", response_model=AnalyseResponse)
-async def analyse(files: list[UploadFile] = File(...)):
+async def analyse(files: list[UploadFile] = File(...), mode: str = Form(default="standard")):
     """
     Accept 2-5 PDF files, validate, save to disk, and start analysis.
 
@@ -252,7 +252,7 @@ async def analyse(files: list[UploadFile] = File(...)):
                 detail="Analysis pipeline not yet initialized. Check server logs.",
             )
 
-        start_analysis(session_id=session_id, pdf_paths=saved_paths)
+        start_analysis(session_id=session_id, pdf_paths=saved_paths, mode=mode)
         logging.info(f"POST /api/analyse: analysis started for session {session_id}")
 
         return AnalyseResponse(session_id=session_id)

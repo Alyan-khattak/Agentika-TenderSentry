@@ -83,6 +83,7 @@ class TenderState(TypedDict):
     human_decision: Optional[str]
     audit_entries: list[dict]
     error: Optional[str]
+    mode: Optional[str]             # "standard" or "version_comparison"
 
 
 # ============================================================================
@@ -260,7 +261,8 @@ def investigate_node(state: TenderState) -> dict:
     session_id = state["session_id"]
     contradictions = state.get("contradictions", [])
     total = len(contradictions)
-    logging.info(f"investigate_node: starting for session {session_id} — {total} contradiction(s)")
+    mode = state.get("mode") or "standard"
+    logging.info(f"investigate_node: starting for session {session_id} — {total} contradiction(s), mode={mode}")
 
     if not contradictions:
         return {}
@@ -272,18 +274,31 @@ def investigate_node(state: TenderState) -> dict:
             f"Document B ({contradiction.doc_b}):\n{contradiction.excerpt_b}\n\n"
             f"Contradiction Type: {contradiction.contradiction_type}"
         )
-        llm_prompt = (
-            f"You are a procurement compliance expert. Analyze this contradiction "
-            f"found in tender documents.\n\n"
-            f"Document A ({contradiction.doc_a}): {contradiction.excerpt_a}\n"
-            f"Document B ({contradiction.doc_b}): {contradiction.excerpt_b}\n"
-            f"Type: {contradiction.contradiction_type}\n\n"
-            f"Provide:\n"
-            f"1. A clear plain-language explanation of the contradiction and why it matters to bidders\n"
-            f"2. A specific question the procurement officer should raise with the issuing authority\n"
-            f"3. A severity level (HIGH, MEDIUM, or LOW)\n\n"
-            f"Be concise and precise."
-        )
+        if mode == "version_comparison":
+            llm_prompt = (
+                f"You are a procurement compliance expert. A document has been updated between versions.\n\n"
+                f"Version 1 ({contradiction.doc_a}): {contradiction.excerpt_a}\n"
+                f"Version 2 ({contradiction.doc_b}): {contradiction.excerpt_b}\n"
+                f"Change Type: {contradiction.contradiction_type}\n\n"
+                f"Provide:\n"
+                f"1. A clear plain-language explanation of what changed between versions and its impact on bidders\n"
+                f"2. A specific question the procurement officer should raise about this version change\n"
+                f"3. A severity level (HIGH, MEDIUM, or LOW)\n\n"
+                f"Be concise and precise."
+            )
+        else:
+            llm_prompt = (
+                f"You are a procurement compliance expert. Analyze this contradiction "
+                f"found in tender documents.\n\n"
+                f"Document A ({contradiction.doc_a}): {contradiction.excerpt_a}\n"
+                f"Document B ({contradiction.doc_b}): {contradiction.excerpt_b}\n"
+                f"Type: {contradiction.contradiction_type}\n\n"
+                f"Provide:\n"
+                f"1. A clear plain-language explanation of the contradiction and why it matters to bidders\n"
+                f"2. A specific question the procurement officer should raise with the issuing authority\n"
+                f"3. A severity level (HIGH, MEDIUM, or LOW)\n\n"
+                f"Be concise and precise."
+            )
         try:
             client = get_instructor_client()
             explanation_obj = client.chat.completions.create(
