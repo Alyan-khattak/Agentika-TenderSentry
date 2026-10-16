@@ -35,6 +35,7 @@ from tendersentry.constants import (
     TYPE_REQUIREMENT,
     SEVERITY_HIGH,
     SEVERITY_MEDIUM,
+    AMOUNT_MIN_LINE_ITEMS,
 )
 from tendersentry.logging.logger import logging
 
@@ -158,6 +159,11 @@ class DateComparator:
                     if len(excerpt) > 200:
                         excerpt = excerpt[:197] + "..."
 
+                    # Reject implausible years (catches "16 October 9001" from "ISO 9001" nearby)
+                    if not (1900 <= date_obj.year <= 2099):
+                        logging.warning(f"DateComparator: ignoring date with implausible year: '{date_str}'")
+                        continue
+
                     # Only flag dates in a deadline context to reduce false positives
                     surrounding = text[max(0, match.start() - 150):match.end() + 150]
                     if not re.search(
@@ -231,7 +237,7 @@ class AmountComparator:
                 line_items_b = [(amt, exc) for amt, exc, is_total in amounts_b if not is_total]
 
                 # A has line items, B has stated total
-                if line_items_a and totals_b:
+                if len(line_items_a) >= AMOUNT_MIN_LINE_ITEMS and totals_b:
                     sum_a = sum(amt for amt, _ in line_items_a)
                     total_b = totals_b[0][0]
                     if total_b > 0:
@@ -254,7 +260,7 @@ class AmountComparator:
                             )
 
                 # B has line items, A has stated total
-                if line_items_b and totals_a:
+                if len(line_items_b) >= AMOUNT_MIN_LINE_ITEMS and totals_a:
                     sum_b = sum(amt for amt, _ in line_items_b)
                     total_a = totals_a[0][0]
                     if total_a > 0:
@@ -370,28 +376,38 @@ class RequirementComparator:
                     excerpt = self._extract_excerpt_for_keyword(chunk.text, keyword_b)
                     occurrences_b[chunk.filename].append(excerpt)
 
-            # Check for contradictions: form 1 in one doc, form 2 in a different doc
-            for filename_a in occurrences_a:
-                for filename_b in occurrences_b:
-                    if filename_a != filename_b:
-                        # Found contradiction: form 1 in doc_a, form 2 in doc_b
-                        excerpt_a = occurrences_a[filename_a][0]  # First occurrence
-                        excerpt_b = occurrences_b[filename_b][0]  # First occurrence
+            # Check for contradictions: keyword_a in doc_a but NOT doc_b, AND keyword_b in doc_b
+            # Use sorted pairs to prevent (A,B) and (B,A) both firing
+            filenames_a = sorted(occurrences_a.keys())
+            for filename_a in filenames_a:
+                for filename_b in sorted(occurrences_b.keys()):
+                    if filename_a == filename_b:
+                        continue
+                    # True conflict: keyword_a is in doc_a but doc_b uses keyword_b instead
+                    # Skip if doc_b also has keyword_a (both docs agree, not a contradiction)
+                    if filename_b in occurrences_a:
+                        continue
+                    # Skip reversed pair if already covered (prevents A,B + B,A)
+                    if filename_b < filename_a and filename_a in occurrences_b:
+                        continue
 
-                        contradiction = RawContradiction(
-                            contradiction_type=TYPE_REQUIREMENT,
-                            doc_a=filename_a,
-                            excerpt_a=excerpt_a,
-                            doc_b=filename_b,
-                            excerpt_b=excerpt_b,
-                            severity=SEVERITY_MEDIUM,
-                            finding_id="F-placeholder",  # ContradictionDetector renumbers
-                        )
-                        contradictions.append(contradiction)
-                        logging.warning(
-                            f"RequirementComparator: '{keyword_a}' in {filename_a} "
-                            f"vs '{keyword_b}' in {filename_b}"
-                        )
+                    excerpt_a = occurrences_a[filename_a][0]
+                    excerpt_b = occurrences_b[filename_b][0]
+
+                    contradiction = RawContradiction(
+                        contradiction_type=TYPE_REQUIREMENT,
+                        doc_a=filename_a,
+                        excerpt_a=excerpt_a,
+                        doc_b=filename_b,
+                        excerpt_b=excerpt_b,
+                        severity=SEVERITY_MEDIUM,
+                        finding_id="F-placeholder",  # ContradictionDetector renumbers
+                    )
+                    contradictions.append(contradiction)
+                    logging.warning(
+                        f"RequirementComparator: '{keyword_a}' in {filename_a} "
+                        f"vs '{keyword_b}' in {filename_b}"
+                    )
 
         logging.info(f"RequirementComparator: found {len(contradictions)} requirement contradictions")
         return contradictions

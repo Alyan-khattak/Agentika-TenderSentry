@@ -217,6 +217,28 @@ def get_status(session_id: str) -> dict:
             }
         }
 
+    # Graph finished with 0 contradictions: documents extracted but compare found nothing.
+    # state_snapshot.next is empty when graph reached END; documents non-empty confirms
+    # extract ran (not just "analysis not started yet").
+    documents = state.get("documents", [])
+    graph_done = not state_snapshot.next and not state_snapshot.tasks
+    if graph_done and documents and not contradictions:
+        logging.info(
+            f"get_status: analysis complete for session {session_id}: "
+            f"0 contradictions detected"
+        )
+        return {
+            "status": STATUS_COMPLETE,
+            "summary": {
+                "session_id": session_id,
+                "total_detected": 0,
+                "total_findings": 0,
+                "total_decisions": 0,
+                "findings": [],
+                "audit_entries": [],
+            }
+        }
+
     # Still running (extract, compare, or investigate phases)
     return {"status": STATUS_RUNNING}
 

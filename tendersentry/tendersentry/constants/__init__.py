@@ -66,6 +66,7 @@ DATE_TOLERANCE_DAYS = 0
 # Amount/math comparison: tolerance for line-item sums vs. stated total
 # Example: if items sum to $847,000 and total says $820,000, diff is 3.2% → flag if > 1%
 AMOUNT_TOLERANCE_PCT = 0.01  # 1% tolerance
+AMOUNT_MIN_LINE_ITEMS = 3   # A document needs at least this many non-total amounts to be treated as a BOQ
 
 # Requirement matching: keyword pairs that conflict
 # DateComparator matches these; if doc A has form 1 and doc B has form 2 → flag
