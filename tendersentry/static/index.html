@@ -6,49 +6,49 @@
     <title>TenderSentry</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         /* ====================================================================
-           Design Tokens — Forensic Intelligence Theme
+           Design Tokens — Warm Sandstone Theme
            ==================================================================== */
         :root {
             /* Base surfaces */
-            --bg:              #05060e;
-            --surface:         #0c1526;
-            --surface-raised:  #111f35;
-            --surface-glass:   rgba(12, 21, 38, 0.88);
+            --bg:              #FBF8F4;
+            --surface:         #F5F0E8;
+            --surface-raised:  #EDE6DA;
+            --surface-glass:   rgba(251, 248, 244, 0.92);
 
             /* Borders */
-            --border:          rgba(255, 255, 255, 0.07);
-            --border-accent:   rgba(59, 130, 246, 0.22);
-            --border-glow:     rgba(59, 130, 246, 0.45);
+            --border:          #CFC2AE;
+            --border-accent:   rgba(201, 96, 32, 0.22);
+            --border-glow:     rgba(201, 96, 32, 0.45);
 
             /* Text */
-            --fg:              #e2e8f5;
-            --fg-muted:        #637a9e;
-            --fg-faint:        #2d3d58;
+            --fg:              #2A2118;
+            --fg-muted:        #5A4A38;
+            --fg-faint:        #AFA090;
 
             /* Semantic colours */
-            --accent:          #3b82f6;
-            --accent-dim:      rgba(59, 130, 246, 0.12);
-            --amber:           #f59e0b;
-            --amber-dim:       rgba(245, 158, 11, 0.12);
-            --flag:            #ef4444;
-            --flag-dim:        rgba(239, 68, 68, 0.12);
-            --dismiss:         #10b981;
-            --dismiss-dim:     rgba(16, 185, 129, 0.12);
-            --escalate:        #f59e0b;
-            --escalate-dim:    rgba(245, 158, 11, 0.12);
+            --accent:          #C96020;
+            --accent-dim:      rgba(201, 96, 32, 0.09);
+            --amber:           #3A6080;
+            --amber-dim:       rgba(58, 96, 128, 0.08);
+            --flag:            #B83030;
+            --flag-dim:        rgba(184, 48, 48, 0.08);
+            --dismiss:         #2A7A50;
+            --dismiss-dim:     rgba(42, 122, 80, 0.08);
+            --escalate:        #C96020;
+            --escalate-dim:    rgba(201, 96, 32, 0.09);
 
             /* Severity */
-            --sev-high:        #ef4444;
-            --sev-medium:      #f59e0b;
-            --sev-low:         #10b981;
+            --sev-high:        #B83030;
+            --sev-medium:      #C96020;
+            --sev-low:         #2A7A50;
 
             /* Badge type colours */
-            --type-deadline:   #3b82f6;
-            --type-requirement: #8b5cf6;
-            --type-amount:     #f97316;
+            --type-deadline:   #B83030;
+            --type-requirement: #3A6080;
+            --type-amount:     #C96020;
 
             /* Easing */
             --ease-out:        cubic-bezier(0.32, 0.72, 0, 1);
@@ -69,17 +69,17 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg);
             color: var(--fg);
             line-height: 1.6;
             font-size: 14px;
             font-weight: 400;
-            /* Subtle mesh gradient background */
+            /* Subtle blueprint grid */
             background-image:
-                radial-gradient(ellipse at 15% 40%, rgba(59, 130, 246, 0.055) 0%, transparent 55%),
-                radial-gradient(ellipse at 85% 15%, rgba(245, 158, 11, 0.035) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 90%, rgba(139, 92, 246, 0.03) 0%, transparent 60%);
+                linear-gradient(rgba(58, 96, 128, 0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(58, 96, 128, 0.055) 1px, transparent 1px);
+            background-size: 32px 32px;
             background-attachment: fixed;
         }
 
@@ -129,8 +129,9 @@
         .app-name {
             font-size: 17px;
             font-weight: 700;
+            font-family: 'DM Serif Display', Georgia, serif;
             color: var(--fg);
-            letter-spacing: -0.01em;
+            letter-spacing: 0;
         }
 
         .app-name span {
@@ -222,8 +223,9 @@
         .screen-title {
             font-size: 22px;
             font-weight: 700;
+            font-family: 'DM Serif Display', Georgia, serif;
             color: var(--fg);
-            letter-spacing: -0.02em;
+            letter-spacing: -0.01em;
             margin-bottom: 24px;
         }
 
@@ -231,7 +233,7 @@
            Double-Bezel Card Architecture
            ==================================================================== */
         .bezel-outer {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.015);
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 4px;
@@ -242,7 +244,7 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
         }
 
         /* ====================================================================
@@ -386,7 +388,7 @@
             cursor: pointer;
             font-size: 13px;
             font-weight: 600;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Source Sans 3', sans-serif;
             letter-spacing: 0.01em;
             transition: all 300ms var(--ease-out);
             display: inline-flex;
@@ -407,12 +409,12 @@
         .btn-primary {
             background: var(--accent);
             color: #fff;
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            box-shadow: 0 0 0 0 rgba(201, 96, 32, 0);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: #4f93ff;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            background: #E87030;
+            box-shadow: 0 4px 20px rgba(201, 96, 32, 0.3);
         }
 
         .btn-primary:disabled {
@@ -426,7 +428,7 @@
         .btn-flag {
             background: var(--flag-dim);
             color: var(--flag);
-            border: 1px solid rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(184, 48, 48, 0.25);
             flex: 1;
             border-radius: 10px;
         }
@@ -434,13 +436,13 @@
             background: var(--flag);
             color: #fff;
             border-color: var(--flag);
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 20px rgba(184, 48, 48, 0.3);
         }
 
         .btn-dismiss {
             background: var(--dismiss-dim);
             color: var(--dismiss);
-            border: 1px solid rgba(16, 185, 129, 0.25);
+            border: 1px solid rgba(42, 122, 80, 0.25);
             flex: 1;
             border-radius: 10px;
         }
@@ -448,21 +450,21 @@
             background: var(--dismiss);
             color: #fff;
             border-color: var(--dismiss);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 20px rgba(42, 122, 80, 0.3);
         }
 
         .btn-escalate {
             background: var(--escalate-dim);
             color: var(--escalate);
-            border: 1px solid rgba(245, 158, 11, 0.25);
+            border: 1px solid rgba(201, 96, 32, 0.25);
             flex: 1;
             border-radius: 10px;
         }
         .btn-escalate:hover:not(:disabled) {
             background: var(--escalate);
-            color: #1a0a00;
+            color: #fff;
             border-color: var(--escalate);
-            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 4px 20px rgba(201, 96, 32, 0.3);
         }
 
         button:disabled {
@@ -505,14 +507,14 @@
 
         .ring-outer {
             border-top-color: var(--accent);
-            border-right-color: rgba(59, 130, 246, 0.2);
+            border-right-color: rgba(201, 96, 32, 0.2);
             animation: spin 1.6s var(--ease-out) infinite;
         }
 
         .ring-mid {
             inset: 10px;
             border-top-color: var(--amber);
-            border-right-color: rgba(245, 158, 11, 0.2);
+            border-right-color: rgba(58, 96, 128, 0.2);
             animation: spin 1.1s linear infinite reverse;
         }
 
@@ -570,17 +572,17 @@
             letter-spacing: 0.08em;
         }
 
-        .badge-deadline    { background: rgba(59, 130, 246, 0.15);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
-        .badge-requirement { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
-        .badge-amount      { background: rgba(249, 115, 22, 0.15);  color: #fb923c; border: 1px solid rgba(249,115,22,0.2); }
-        .badge-semantic    { background: rgba(34, 211, 238, 0.12);  color: #22d3ee; border: 1px solid rgba(34,211,238,0.25); }
-        .badge-invoice     { background: rgba(34, 211, 238, 0.12);  color: #22d3ee; border: 1px solid rgba(34,211,238,0.25); }
-        .badge-duplicate   { background: rgba(244, 63, 94, 0.12);   color: #fb7185; border: 1px solid rgba(244,63,94,0.25); }
-        .badge-budget      { background: rgba(167, 139, 250, 0.12); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.25); }
-        .badge-vat         { background: rgba(251, 146, 60, 0.12);  color: #fdba74; border: 1px solid rgba(251,146,60,0.25); }
-        .badge-high        { background: rgba(239, 68, 68, 0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-        .badge-medium      { background: rgba(245, 158, 11, 0.15);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-        .badge-low         { background: rgba(16, 185, 129, 0.15);  color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+        .badge-deadline    { background: rgba(184, 48, 48, 0.10);  color: #B83030; border: 1px solid rgba(184,48,48,0.22); }
+        .badge-requirement { background: rgba(58, 96, 128, 0.08);  color: #3A6080; border: 1px solid rgba(58,96,128,0.20); }
+        .badge-amount      { background: rgba(201, 96, 32, 0.09);  color: #C96020; border: 1px solid rgba(201,96,32,0.22); }
+        .badge-semantic    { background: rgba(58, 96, 128, 0.08);  color: #3A6080; border: 1px solid rgba(58,96,128,0.20); }
+        .badge-invoice     { background: rgba(201, 96, 32, 0.09);  color: #C96020; border: 1px solid rgba(201,96,32,0.22); }
+        .badge-duplicate   { background: rgba(184, 48, 48, 0.10);  color: #B83030; border: 1px solid rgba(184,48,48,0.22); }
+        .badge-budget      { background: rgba(58, 96, 128, 0.08);  color: #3A6080; border: 1px solid rgba(58,96,128,0.20); }
+        .badge-vat         { background: rgba(201, 96, 32, 0.09);  color: #C96020; border: 1px solid rgba(201,96,32,0.22); }
+        .badge-high        { background: rgba(184, 48, 48, 0.10);  color: #B83030; border: 1px solid rgba(184,48,48,0.22); }
+        .badge-medium      { background: rgba(201, 96, 32, 0.09);  color: #C96020; border: 1px solid rgba(201,96,32,0.22); }
+        .badge-low         { background: rgba(42, 122, 80, 0.08);  color: #2A7A50; border: 1px solid rgba(42,122,80,0.20); }
 
         /* ====================================================================
            HITL Finding Panel
@@ -595,7 +597,7 @@
             align-items: center;
             padding: 16px 20px;
             border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.015);
+            background: rgba(0, 0, 0, 0.02);
         }
 
         .finding-counter {
@@ -620,7 +622,7 @@
             display: none;
             padding: 8px 20px;
             border-bottom: 1px solid var(--border);
-            background: rgba(59, 130, 246, 0.04);
+            background: rgba(201, 96, 32, 0.04);
             font-size: 11px;
             color: var(--fg-muted);
             font-family: 'JetBrains Mono', monospace;
@@ -636,10 +638,10 @@
             align-items: center;
             gap: 10px;
             padding: 10px 20px;
-            border-bottom: 1px solid rgba(245,158,11,0.35);
-            background: rgba(245,158,11,0.08);
+            border-bottom: 1px solid rgba(58,96,128,0.30);
+            background: rgba(58,96,128,0.07);
             font-size: 12px;
-            color: var(--amber, #f59e0b);
+            color: var(--amber, #3A6080);
         }
         .deadline-alert svg { flex-shrink: 0; }
 
@@ -675,7 +677,7 @@
         }
         .mode-tab:hover:not(.active) {
             color: var(--fg);
-            background: rgba(255,255,255,0.03);
+            background: rgba(0,0,0,0.04);
         }
 
         /* Two-column excerpt grid */
@@ -717,7 +719,7 @@
         }
 
         .excerpt {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.04);
             border-left: 2px solid var(--accent);
             padding: 12px 14px;
             border-radius: 6px;
@@ -731,26 +733,26 @@
         }
 
         .excerpt mark {
-            background: rgba(245, 158, 11, 0.28);
-            color: #fcd34d;
+            background: rgba(201, 96, 32, 0.18);
+            color: #A04010;
             border-radius: 3px;
             padding: 0 2px;
             font-style: normal;
         }
 
         /* Audit log — tender ref grouping */
-        .audit-group-header td { padding: 0 !important; background: rgba(59,130,246,0.06); border-top: 1px solid var(--border); }
+        .audit-group-header td { padding: 0 !important; background: rgba(201,96,32,0.05); border-top: 1px solid var(--border); }
         .audit-group-header-inner { display: flex; align-items: center; gap: 10px; padding: 8px 14px; flex-wrap: wrap; }
         .audit-group-ref { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; flex-shrink: 0; }
         .audit-group-chips { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
         .audit-chip { font-size: 10px; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.03em; }
-        .chip-total    { background: rgba(148,163,184,0.12); color: var(--fg-muted); }
+        .chip-total    { background: rgba(90, 74, 56, 0.08); color: var(--fg-muted); }
         .chip-flag     { background: rgba(239,68,68,0.12);   color: var(--flag,#ef4444); }
         .chip-dismiss  { background: rgba(16,185,129,0.12);  color: var(--dismiss,#10b981); }
-        .chip-escalate { background: rgba(245,158,11,0.12);  color: var(--amber,#f59e0b); }
-        .chip-jev      { background: rgba(139,92,246,0.12);  color: #a78bfa; }
+        .chip-escalate { background: rgba(201,96,32,0.09);   color: var(--escalate,#C96020); }
+        .chip-jev      { background: rgba(58,96,128,0.10);   color: #3A6080; }
         .audit-group-toggle { margin-left: auto; font-size: 10px; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--fg-muted); cursor: pointer; white-space: nowrap; }
-        .audit-group-toggle:hover { background: rgba(255,255,255,0.05); color: var(--fg); }
+        .audit-group-toggle:hover { background: rgba(0,0,0,0.05); color: var(--fg); }
         .audit-summary-panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 14px 14px 10px; }
         .audit-summary-stat { display: flex; flex-direction: column; gap: 2px; }
         .audit-summary-stat span { font-size: 10px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -838,11 +840,11 @@
         .finding-note {
             width: 100%;
             padding: 12px 14px;
-            background: rgba(0, 0, 0, 0.25);
+            background: rgba(0, 0, 0, 0.03);
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--fg);
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Source Sans 3', sans-serif;
             font-size: 13px;
             resize: vertical;
             min-height: 64px;
@@ -928,7 +930,7 @@
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
 
         .stat-card::before {
@@ -940,7 +942,7 @@
         }
 
         .stat-card[data-type="found"]     { --stat-color: var(--accent); }
-        .stat-card[data-type="validated"] { --stat-color: #8b5cf6; }
+        .stat-card[data-type="validated"] { --stat-color: #3A6080; }
         .stat-card[data-type="flagged"]   { --stat-color: var(--flag); }
         .stat-card[data-type="dismissed"] { --stat-color: var(--dismiss); }
         .stat-card[data-type="escalated"] { --stat-color: var(--amber); }
@@ -989,7 +991,7 @@
         }
 
         .audit-table th {
-            background: rgba(255, 255, 255, 0.025);
+            background: rgba(0, 0, 0, 0.03);
             color: var(--fg-muted);
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -1095,7 +1097,7 @@
 
         .modal-panel {
             background: var(--surface);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
             border-radius: 20px;
             max-width: 780px;
             width: 100%;
@@ -1103,7 +1105,7 @@
             overflow-y: auto;
             padding: 28px;
             position: relative;
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
             animation: modal-in 350ms var(--ease-spring);
         }
 
@@ -1133,7 +1135,7 @@
 
         .modal-close:hover {
             color: var(--fg);
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .modal-close:focus-visible {
@@ -1206,6 +1208,25 @@
         }
 
         /* ====================================================================
+           Back / Cancel button
+           ==================================================================== */
+        .btn-back {
+            background: transparent;
+            color: var(--fg-muted);
+            border: 1px solid var(--border);
+            min-width: unset;
+            padding: 0 14px;
+            font-size: 12px;
+            height: 34px;
+            margin-bottom: 14px;
+        }
+        .btn-back:hover {
+            background: rgba(0,0,0,0.04);
+            color: var(--fg);
+            border-color: var(--border-accent);
+        }
+
+        /* ====================================================================
            Utility
            ==================================================================== */
         .hidden { display: none; }
@@ -1246,9 +1267,9 @@
                 <!-- Shield / scan icon -->
                 <div class="brand-icon">
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" stroke="rgba(59,130,246,0.5)" stroke-width="1.5" fill="rgba(59,130,246,0.08)"/>
-                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" stroke="rgba(59,130,246,0.3)" stroke-width="1" fill="none"/>
-                        <path d="M10 14l3 3 5-5" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" stroke="rgba(201,96,32,0.5)" stroke-width="1.5" fill="rgba(201,96,32,0.08)"/>
+                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" stroke="rgba(201,96,32,0.3)" stroke-width="1" fill="none"/>
+                        <path d="M10 14l3 3 5-5" stroke="#C96020" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
                 <div class="app-name">Tender<span>Sentry</span></div>
@@ -1366,6 +1387,8 @@
                     </div>
                     <h2 class="screen-title">Review Finding</h2>
 
+                    <button class="btn-back" id="btn-back-to-upload" aria-label="Cancel review and start new analysis">← New Analysis</button>
+
                     <div class="bezel-outer">
                         <div class="bezel-inner finding-panel">
 
@@ -1388,8 +1411,8 @@
                             <!-- Deadline proximity alert (Feature 21) -->
                             <div id="deadline-alert" class="deadline-alert" role="alert">
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                                    <path d="M7 1L13 12H1L7 1z" stroke="#f59e0b" stroke-width="1.3" stroke-linejoin="round"/>
-                                    <path d="M7 5.5v3M7 10h.01" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round"/>
+                                    <path d="M7 1L13 12H1L7 1z" stroke="#3A6080" stroke-width="1.3" stroke-linejoin="round"/>
+                                    <path d="M7 5.5v3M7 10h.01" stroke="#3A6080" stroke-width="1.3" stroke-linecap="round"/>
                                 </svg>
                                 <span id="deadline-alert-msg"></span>
                             </div>
@@ -2394,7 +2417,7 @@
             showToast('CSV downloaded');
         });
 
-        document.getElementById('new-analysis-button').addEventListener('click', () => {
+        function resetToUpload() {
             stopPolling();
             state.currentScreen = 'upload';
             state.sessionId     = null;
@@ -2419,12 +2442,13 @@
 
             document.getElementById('session-display').classList.remove('visible');
             document.getElementById('error-banner').classList.remove('show');
-
-            // Reset stat cards reveal state for next summary
             document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('revealed'));
 
             showScreen('upload');
-        });
+        }
+
+        document.getElementById('new-analysis-button').addEventListener('click', resetToUpload);
+        document.getElementById('btn-back-to-upload').addEventListener('click', resetToUpload);
 
         // ====================================================================
         // Scroll-Reveal via IntersectionObserver
