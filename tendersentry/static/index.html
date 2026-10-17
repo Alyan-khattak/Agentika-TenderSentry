@@ -176,6 +176,177 @@
         }
 
         /* ====================================================================
+           App Body — sidebar + content row
+           ==================================================================== */
+        .app-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ====================================================================
+           Sidebar
+           ==================================================================== */
+        .sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px 0 24px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 18px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-brand-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand-name {
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'DM Serif Display', Georgia, serif;
+            color: var(--fg);
+            line-height: 1.2;
+        }
+
+        .sidebar-brand-sub {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--fg-faint);
+        }
+
+        .sidebar-section {
+            margin-top: 12px;
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--fg-faint);
+            padding: 0 18px 6px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--fg-muted);
+            cursor: pointer;
+            border-left: 2px solid transparent;
+            transition: background 150ms, color 150ms, border-color 150ms;
+            user-select: none;
+        }
+
+        .sidebar-item:hover {
+            background: var(--accent-dim);
+            color: var(--fg);
+        }
+
+        .sidebar-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .sidebar-item svg {
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        .sidebar-item.active svg {
+            opacity: 1;
+        }
+
+        .sidebar-badge {
+            margin-left: auto;
+            background: var(--accent);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sidebar-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 8px 14px 0;
+        }
+
+        .sidebar-stat {
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 10px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'DM Serif Display', Georgia, serif;
+            color: var(--fg);
+            line-height: 1;
+        }
+
+        .sidebar-stat-value.flagged { color: var(--flag); }
+        .sidebar-stat-value.dismissed { color: var(--dismiss); }
+        .sidebar-stat-value.escalated { color: var(--escalate); }
+
+        .sidebar-stat-label {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--fg-faint);
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 12px 18px;
+        }
+
+        /* ====================================================================
            Content Area
            ==================================================================== */
         .app-content {
@@ -183,6 +354,7 @@
             display: flex;
             justify-content: center;
             padding: 32px 16px 48px;
+            overflow-y: auto;
         }
 
         .panel-container {
@@ -1253,6 +1425,11 @@
             .app-content { padding: 20px 16px 40px; }
             .screen-title { font-size: 18px; }
             .panel-container { max-width: 100%; }
+            .sidebar { width: 200px; }
+        }
+
+        @media (max-width: 560px) {
+            .sidebar { display: none; }
         }
     </style>
 </head>
@@ -1283,8 +1460,87 @@
         </header>
 
         <!-- ================================================================
-             Content
+             Body: Sidebar + Content
              ================================================================ -->
+        <div class="app-body">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="app-sidebar">
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                        <path d="M14 3L4 7v7c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 3z" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                        <path d="M10 14l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="sidebar-brand-text">
+                    <div class="sidebar-brand-name">TenderSentry</div>
+                    <div class="sidebar-brand-sub">Forensic Analysis</div>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Workspace</div>
+                <div class="sidebar-item active" id="snav-upload" onclick="sidebarNav('upload')">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 9V3M7 3L4 6M7 3l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    New Upload
+                </div>
+                <div class="sidebar-item" id="snav-summary" onclick="sidebarNav('summary')">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 6h6M4 9h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    Audit Log
+                    <span class="sidebar-badge" id="snav-found-badge" style="display:none">0</span>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Modules -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Modules</div>
+                <div class="sidebar-item" id="snav-standard" onclick="sidebarSetMode('standard')">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h7M2 10h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    Tender Analysis
+                </div>
+                <div class="sidebar-item" id="snav-version" onclick="sidebarSetMode('version_comparison')">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M6 4h2a2 2 0 012 2v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    Version Compare
+                </div>
+                <div class="sidebar-item" id="snav-invoice" onclick="sidebarSetMode('invoice_review')">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4.5 5h5M4.5 7.5h5M4.5 10h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    Invoice Review
+                </div>
+            </div>
+
+            <!-- Session Summary (shown only when session exists) -->
+            <div id="sidebar-session-section" style="display:none">
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">Session Summary</div>
+                    <div class="sidebar-stats">
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value" id="snav-stat-found">0</div>
+                            <div class="sidebar-stat-label">Found</div>
+                        </div>
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value flagged" id="snav-stat-flagged">0</div>
+                            <div class="sidebar-stat-label">Flagged</div>
+                        </div>
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value dismissed" id="snav-stat-dismissed">0</div>
+                            <div class="sidebar-stat-label">Dismissed</div>
+                        </div>
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value escalated" id="snav-stat-escalated">0</div>
+                            <div class="sidebar-stat-label">Escalated</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content -->
         <div class="app-content">
             <div class="panel-container">
 
@@ -1644,6 +1900,7 @@
 
             </div><!-- /panel-container -->
         </div><!-- /app-content -->
+        </div><!-- /app-body -->
     </div><!-- /app-container -->
 
     <script>
@@ -1722,7 +1979,6 @@
             const screen = document.getElementById(screenName + '-screen');
             if (screen) {
                 screen.classList.add('active');
-                // Trigger reveal animations for summary stats on summary screen
                 if (screenName === 'summary') {
                     requestAnimationFrame(() => {
                         document.querySelectorAll('.stat-card').forEach((el, i) => {
@@ -1732,6 +1988,54 @@
                 }
             }
             state.currentScreen = screenName;
+            updateSidebarActive(screenName);
+        }
+
+        function updateSidebarActive(screenName) {
+            ['upload', 'summary'].forEach(name => {
+                const el = document.getElementById('snav-' + name);
+                if (el) el.classList.toggle('active', screenName === name);
+            });
+        }
+
+        function sidebarNav(screenName) {
+            if (screenName === 'summary' && !state.sessionId) return;
+            showScreen(screenName);
+        }
+
+        function sidebarSetMode(mode) {
+            showScreen('upload');
+            const tab = document.querySelector(`.mode-tab[data-mode="${mode}"]`);
+            if (tab) tab.click();
+            updateSidebarModuleActive(mode);
+        }
+
+        function updateSidebarModuleActive(mode) {
+            ['standard', 'version', 'invoice'].forEach(k => {
+                const el = document.getElementById('snav-' + k);
+                if (el) el.classList.remove('active');
+            });
+            const map = { standard: 'snav-standard', version_comparison: 'snav-version', invoice_review: 'snav-invoice' };
+            const el = document.getElementById(map[mode]);
+            if (el) el.classList.add('active');
+        }
+
+        function updateSidebarStats(entries) {
+            const found     = entries.length;
+            const flagged   = entries.filter(e => e.human_decision === 'flag').length;
+            const dismissed = entries.filter(e => e.human_decision === 'dismiss').length;
+            const escalated = entries.filter(e => e.human_decision === 'escalate').length;
+
+            document.getElementById('snav-stat-found').textContent     = found;
+            document.getElementById('snav-stat-flagged').textContent   = flagged;
+            document.getElementById('snav-stat-dismissed').textContent = dismissed;
+            document.getElementById('snav-stat-escalated').textContent = escalated;
+
+            const badge = document.getElementById('snav-found-badge');
+            if (found > 0) { badge.textContent = found; badge.style.display = 'flex'; }
+            else { badge.style.display = 'none'; }
+
+            document.getElementById('sidebar-session-section').style.display = found > 0 ? '' : 'none';
         }
 
         // ====================================================================
@@ -1862,6 +2166,7 @@
                 document.querySelector('#upload-screen .screen-title').textContent = title;
                 document.querySelector('.upload-hint').textContent = hint;
                 document.getElementById('analyse-btn-label').textContent = btnLabel;
+                updateSidebarModuleActive(tab.dataset.mode);
             });
         });
 
@@ -2163,6 +2468,7 @@
                 document.getElementById('stat-dismissed').textContent = dismissCount;
                 document.getElementById('stat-escalated').textContent = escalateCount;
 
+                updateSidebarStats(entries);
                 displayAuditLog(entries);
             } catch (error) {
                 showError('Request timed out. Check connection.');
